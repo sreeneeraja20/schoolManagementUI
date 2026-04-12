@@ -7,7 +7,7 @@
     "role": "ADMIN",
     "name": "Admin User",
     "staffId": "STAFF-001",
-    "isFirstLogin": false
+    "isFirstLogin": true
   },
   {
     "id": "user-002",
