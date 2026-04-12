@@ -1,0 +1,155 @@
+.builder-page {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+
+  .page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    h1 {
+      margin: 0;
+      font-size: 1.5rem;
+      font-weight: 600;
+    }
+    .header-actions {
+      display: flex;
+      gap: 0.75rem;
+    }
+  }
+
+  .filters-row {
+    display: flex;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+
+    .filter-item {
+      display: flex;
+      flex-direction: column;
+      gap: 0.375rem;
+      min-width: 200px;
+      label { font-weight: 500; font-size: 0.9rem; }
+    }
+  }
+
+  .info-banner {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem 1.5rem;
+    background: var(--blue-50, #eff6ff);
+    border: 1px solid var(--blue-200, #bfdbfe);
+    border-radius: 8px;
+    color: var(--blue-700, #1d4ed8);
+    i { font-size: 1.25rem; }
+  }
+
+  .timetable-wrapper {
+    overflow-x: auto;
+
+    .timetable-grid {
+      width: 100%;
+      border-collapse: collapse;
+
+      th, td {
+        border: 1px solid var(--surface-border);
+        padding: 0.5rem;
+        text-align: center;
+        vertical-align: top;
+      }
+
+      th {
+        background: var(--surface-100, #f4f4f5);
+        font-weight: 600;
+        font-size: 0.875rem;
+        white-space: nowrap;
+      }
+
+      .period-col { min-width: 80px; }
+
+      .period-cell {
+        font-weight: 600;
+        background: var(--surface-50, #fafafa);
+        white-space: nowrap;
+        font-size: 0.8rem;
+        vertical-align: middle;
+      }
+
+      .slot-cell {
+        min-width: 130px;
+        min-height: 70px;
+        position: relative;
+        cursor: pointer;
+        transition: background 0.15s;
+
+        &:hover { background: var(--surface-50, #fafafa); }
+
+        &.has-subject { background: var(--primary-50, #f0f9ff); }
+
+        &.editing {
+          background: var(--yellow-50, #fefce8);
+          cursor: default;
+        }
+
+        .slot-content {
+          display: flex;
+          flex-direction: column;
+          gap: 0.2rem;
+          padding: 0.375rem;
+          position: relative;
+
+          &:hover .edit-icon { opacity: 1; }
+
+          .subject-name {
+            font-weight: 600;
+            font-size: 0.8rem;
+            color: var(--primary-700, #1d4ed8);
+          }
+
+          .staff-name {
+            font-size: 0.75rem;
+            color: var(--text-color-secondary);
+          }
+
+          .edit-icon {
+            position: absolute;
+            top: 0.25rem;
+            right: 0.25rem;
+            font-size: 0.7rem;
+            opacity: 0;
+            transition: opacity 0.15s;
+            color: var(--primary-color);
+          }
+        }
+
+        .empty-cell {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          min-height: 60px;
+          color: var(--surface-400, #a1a1aa);
+          font-size: 1rem;
+          &:hover { color: var(--primary-color); }
+        }
+
+        .edit-form {
+          display: flex;
+          flex-direction: column;
+          gap: 0.375rem;
+          padding: 0.375rem;
+
+          .edit-dropdown { font-size: 0.8rem; }
+
+          .edit-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.25rem;
+          }
+        }
+      }
+    }
+  }
+}
+
+.w-full { width: 100%; }

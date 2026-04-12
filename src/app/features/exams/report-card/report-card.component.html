@@ -1,0 +1,151 @@
+<div class="report-page" id="reportCard">
+  <div class="page-header no-print">
+    <div class="header-left">
+      <p-button icon="pi pi-arrow-left" severity="secondary" [rounded]="true" [text]="true" (click)="goBack()"></p-button>
+      <nav class="breadcrumb">
+        <span class="breadcrumb-link" (click)="goBack()">{{ 'EXAMS.TITLE' | translate }}</span>
+        <span class="breadcrumb-sep"> &gt; </span>
+        <span>{{ 'EXAMS.REPORT_CARD' | translate }}</span>
+      </nav>
+    </div>
+    <div class="header-actions">
+      <p-button
+        icon="pi pi-print"
+        [label]="'EXAMS.PRINT' | translate"
+        (click)="printCard()">
+      </p-button>
+    </div>
+  </div>
+
+  @if (student) {
+    <!-- School Header -->
+    <div class="school-header">
+      <h2 class="school-name">{{ schoolName }}</h2>
+      <h3 class="card-title">{{ 'EXAMS.REPORT_CARD' | translate }}</h3>
+      <p class="academic-year">{{ 'STUDENTS.ACADEMIC_YEAR' | translate }}: {{ academicYearName }}</p>
+    </div>
+
+    <!-- Student Info -->
+    <p-card styleClass="student-info-card">
+      <div class="student-info-grid">
+        <div class="info-item">
+          <span class="info-label">{{ 'STUDENTS.NAME' | translate }}</span>
+          <span class="info-value">{{ student.name }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">{{ 'STUDENTS.ROLL_NUMBER' | translate }}</span>
+          <span class="info-value">{{ student.rollNumber }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">{{ 'EXAMS.CLASS' | translate }}</span>
+          <span class="info-value">{{ className }} - {{ sectionName }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">{{ 'STUDENTS.GENDER' | translate }}</span>
+          <span class="info-value">{{ student.gender }}</span>
+        </div>
+      </div>
+    </p-card>
+
+    <!-- Exam Results -->
+    @for (er of examResults; track er.exam.id) {
+      <p-card [header]="er.exam.name" styleClass="exam-result-card">
+        <p-table [value]="er.subjects" [loading]="loading" styleClass="p-datatable-sm" [tableStyle]="{'width':'100%'}">
+          <ng-template pTemplate="header">
+            <tr>
+              <th>{{ 'EXAMS.SUBJECT' | translate }}</th>
+              <th class="text-center">{{ 'EXAMS.MAX_MARKS' | translate }}</th>
+              <th class="text-center">{{ 'EXAMS.MARKS_OBTAINED' | translate }}</th>
+              <th class="text-center">{{ 'EXAMS.PERCENTAGE' | translate }}</th>
+              <th class="text-center">{{ 'EXAMS.GRADE' | translate }}</th>
+              <th class="text-center">{{ 'EXAMS.GRADE_POINT' | translate }}</th>
+              <th class="text-center">{{ 'EXAMS.RESULT' | translate }}</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-row>
+            <tr>
+              <td>{{ row.subjectName }}</td>
+              <td class="text-center">{{ row.maxMarks }}</td>
+              <td class="text-center">{{ row.isAbsent ? ('EXAMS.ABSENT' | translate) : (row.marksObtained ?? '-') }}</td>
+              <td class="text-center">{{ row.percentage !== null ? row.percentage + '%' : '-' }}</td>
+              <td class="text-center"><strong>{{ row.grade }}</strong></td>
+              <td class="text-center">{{ row.gradePoint }}</td>
+              <td class="text-center">
+                <p-tag [value]="row.result" [severity]="getResultSeverity(row.result)"></p-tag>
+              </td>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="footer">
+            <tr class="total-row">
+              <td><strong>{{ 'EXAMS.TOTAL' | translate }}</strong></td>
+              <td class="text-center"><strong>{{ er.totalMaxMarks }}</strong></td>
+              <td class="text-center"><strong>{{ er.totalMarks }}</strong></td>
+              <td class="text-center"><strong>{{ er.overallPercent }}%</strong></td>
+              <td class="text-center"><strong>{{ er.overallGrade }}</strong></td>
+              <td class="text-center"><strong>{{ er.overallGradePoint }}</strong></td>
+              <td></td>
+            </tr>
+            @if (getSpacerRows(er.subjects.length, 1) > 0) {
+            <tr class="table-spacer-row" aria-hidden="true">
+              <td [attr.colspan]="7" class="table-spacer-cell">
+                <div class="table-spacer" [style.height.rem]="getSpacerRows(er.subjects.length, 1) * rowHeightRem"></div>
+              </td>
+            </tr>
+            }
+          </ng-template>
+        </p-table>
+      </p-card>
+    }
+
+    <!-- Grade Scale -->
+    <p-card [header]="'EXAMS.GRADE_SCALE' | translate" styleClass="grade-scale-card">
+      <p-table [value]="gradeScale" [loading]="loading" styleClass="p-datatable-sm p-datatable-gridlines" [tableStyle]="{'width':'100%'}">
+        <ng-template pTemplate="header">
+          <tr>
+            <th>{{ 'EXAMS.GRADE' | translate }}</th>
+            <th>{{ 'EXAMS.GRADE_POINT' | translate }}</th>
+            <th>{{ 'EXAMS.PERCENTAGE' | translate }}</th>
+            <th>Description</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-gs>
+          <tr>
+            <td><strong>{{ gs.grade }}</strong></td>
+            <td>{{ gs.gradePoint }}</td>
+            <td>{{ gs.minPercent }}% – {{ gs.maxPercent }}%</td>
+            <td>{{ gs.description }}</td>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="footer">
+          @if (getSpacerRows(gradeScale.length) > 0) {
+          <tr class="table-spacer-row" aria-hidden="true">
+            <td [attr.colspan]="4" class="table-spacer-cell">
+              <div class="table-spacer" [style.height.rem]="getSpacerRows(gradeScale.length) * rowHeightRem"></div>
+            </td>
+          </tr>
+          }
+        </ng-template>
+      </p-table>
+    </p-card>
+
+    <!-- Attendance -->
+    @if (totalDays > 0) {
+      <p-card [header]="'STUDENTS.ATTENDANCE_SUMMARY' | translate" styleClass="attendance-card">
+        <div class="att-summary">
+          <div class="att-item">
+            <span class="att-label">{{ 'STUDENTS.TOTAL_DAYS' | translate }}</span>
+            <span class="att-value">{{ totalDays }}</span>
+          </div>
+          <div class="att-item">
+            <span class="att-label">{{ 'ATTENDANCE.PRESENT' | translate }}</span>
+            <span class="att-value">{{ presentDays }}</span>
+          </div>
+          <div class="att-item">
+            <span class="att-label">{{ 'STUDENTS.PRESENT_PERCENT' | translate }}</span>
+            <span class="att-value">{{ attendancePercent }}%</span>
+          </div>
+        </div>
+      </p-card>
+    }
+  }
+</div>

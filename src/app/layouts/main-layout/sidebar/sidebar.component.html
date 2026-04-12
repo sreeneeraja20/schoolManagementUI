@@ -1,0 +1,25 @@
+<aside class="sidebar" [class.collapsed]="collapsed" [class.open]="mobileOpen">
+  <div class="sidebar-header">
+    <img [src]="tenantLogo" [alt]="tenantName" class="school-logo" (error)="onImgError($event)">
+    <span class="school-name" *ngIf="!collapsed">{{ tenantName }}</span>
+  </div>
+  <nav class="sidebar-nav">
+    <ng-container *ngFor="let group of filteredNavGroups">
+      <!-- Section label (hidden when collapsed) -->
+      <span class="nav-section-label" *ngIf="!collapsed">
+        {{ group.section | translate }}
+      </span>
+      <!-- Divider shown when collapsed -->
+      <div class="nav-section-divider" *ngIf="collapsed"></div>
+      <a *ngFor="let item of group.items" [routerLink]="'/' + tenantSlug + '/' + item.route"
+        routerLinkActive="active-nav-item" class="nav-item" (click)="closeMobile()">
+        <i [class]="item.icon"></i>
+        <span class="nav-item-label" *ngIf="!collapsed">{{ item.label | translate }}</span>
+      </a>
+    </ng-container>
+  </nav>
+  <div class="sidebar-toggle desktop-only" (click)="toggleCollapse()">
+    <i [class]="collapsed ? 'pi pi-chevron-right' : 'pi pi-chevron-left'"></i>
+  </div>
+</aside>
+<div class="sidebar-overlay" *ngIf="mobileOpen" (click)="closeMobile()"></div>

@@ -1,0 +1,23 @@
+<div class="list-page">
+  <p-toast></p-toast>
+  <p-confirmDialog></p-confirmDialog>
+  <div class="page-header">
+    <h1>{{ 'EVENTS.TITLE' | translate }}</h1>
+    <p-button
+      icon="pi pi-calendar"
+      [label]="'EVENTS.CALENDAR' | translate"
+      severity="secondary"
+      (click)="goToCalendar()">
+    </p-button>
+  </div>
+  <app-data-table
+    [config]="tableConfig"
+    [data]="data"
+    [totalRecords]="data.length"
+    [loading]="loading"
+    (addClick)="onAdd()"
+    (editClick)="onEdit($event)"
+    (deleteClick)="onDelete($event)"
+    (filterChange)="onFilter($event)">
+  </app-data-table>
+</div>

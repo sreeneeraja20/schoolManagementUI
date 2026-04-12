@@ -1,0 +1,180 @@
+<p-toast />
+<p-confirmDialog />
+
+<div class="parent-view-page" *ngIf="parent; else notFound">
+
+  <!-- Header -->
+  <div class="page-header">
+    <h2>{{ 'PARENTS.VIEW' | translate }}</h2>
+    <div class="header-actions">
+      <p-button icon="pi pi-arrow-left" [label]="'SETUP.BACK_TO_LIST' | translate" severity="secondary" (onClick)="goBack()" class="mr-2" />
+    </div>
+  </div>
+
+  <div class="view-grid">
+
+    <!-- Parent Information -->
+    <p-card [header]="'PARENTS.TITLE' | translate">
+      <div class="info-grid">
+        <div class="info-row">
+          <label>{{ 'PARENTS.NAME' | translate }}</label>
+          <span>{{ parent.name }}</span>
+        </div>
+        <div class="info-row">
+          <label>{{ 'PARENTS.RELATION' | translate }}</label>
+          <span>{{ parent.relation }}</span>
+        </div>
+        <div class="info-row">
+          <label>{{ 'PARENTS.EMAIL' | translate }}</label>
+          <span>{{ parent.email }}</span>
+        </div>
+        <div class="info-row">
+          <label>{{ 'PARENTS.PHONE' | translate }}</label>
+          <span>{{ parent.phone }}</span>
+        </div>
+        <div class="info-row">
+          <label>{{ 'PARENTS.LANGUAGE' | translate }}</label>
+          <span>{{ parent.preferredLanguage === 'ta' ? 'Tamil' : 'English' }}</span>
+        </div>
+        <div class="info-row">
+          <label>{{ 'AUDIT.CREATED_BY' | translate }}</label>
+          <span>{{ parent.createdBy }}</span>
+        </div>
+        <div class="info-row">
+          <label>{{ 'AUDIT.CREATED_DATE' | translate }}</label>
+          <span>{{ parent.createdDate | date:'medium' }}</span>
+        </div>
+      </div>
+    </p-card>
+
+    <!-- Login Details -->
+    <p-card [header]="'PARENTS.LOGIN_DETAILS' | translate">
+      <div class="info-grid">
+        <div class="info-row">
+          <label>{{ 'PARENTS.STATUS' | translate }}</label>
+          <p-tag [value]="getLoginStatusLabel()" [severity]="getLoginStatusSeverity()" />
+        </div>
+        <div class="info-row">
+          <label>{{ 'PARENTS.LAST_LOGIN' | translate }}</label>
+          <span>{{ (parent.lastLoginAt | date:'medium') || '—' }}</span>
+        </div>
+        <div class="info-row">
+          <label>{{ 'PARENTS.LOGIN_DEVICE' | translate }}</label>
+          <span>{{ parent.lastLoginDevice || '—' }}</span>
+        </div>
+        <div class="info-row">
+          <label>{{ 'PARENTS.LOGIN_PLATFORM' | translate }}</label>
+          <span>{{ parent.lastLoginPlatform || '—' }}</span>
+        </div>
+        <div class="info-row">
+          <label>{{ 'PARENTS.LOGIN_IP' | translate }}</label>
+          <span>{{ parent.lastLoginIp || '—' }}</span>
+        </div>
+        <div class="info-row">
+          <label>{{ 'PARENTS.LOGIN_COUNT' | translate }}</label>
+          <span>{{ parent.loginCount }}</span>
+        </div>
+        <div class="info-row">
+          <label>{{ 'PARENTS.PASSWORD_CHANGED' | translate }}</label>
+          <p-tag
+            [value]="parent.isFirstLogin ? ('PARENTS.NO' | translate) : ('PARENTS.YES' | translate)"
+            [severity]="parent.isFirstLogin ? 'warn' : 'success'"
+          />
+        </div>
+      </div>
+    </p-card>
+
+    <!-- Linked Children -->
+    <p-card [header]="'PARENTS.LINKED_CHILDREN' | translate">
+      <div *ngIf="linkedStudents.length > 0; else noChildren">
+        <div class="student-row" *ngFor="let s of linkedStudents">
+          <div class="student-info">
+            <span class="student-name">{{ s.name }}</span>
+            <span class="student-meta">{{ s.rollNumber }} · {{ s.className }} - {{ s.sectionName }}</span>
+          </div>
+          <p-button
+            icon="pi pi-eye"
+            [label]="'STUDENTS.VIEW' | translate"
+            severity="secondary"
+            size="small"
+            (onClick)="viewStudent(s.id)"
+          />
+        </div>
+      </div>
+      <ng-template #noChildren>
+        <p class="no-data">{{ 'COMMON.NO_DATA' | translate }}</p>
+      </ng-template>
+    </p-card>
+
+    <!-- Notification Preferences -->
+    <p-card [header]="'PARENTS.NOTIFICATION_PREFS' | translate">
+      <div class="info-grid">
+        <div class="info-row">
+          <label>{{ 'PARENTS.NOTIFY_ATTENDANCE' | translate }}</label>
+          <p-tag
+            [value]="parent.notifyAttendance ? ('PARENTS.YES' | translate) : ('PARENTS.NO' | translate)"
+            [severity]="parent.notifyAttendance ? 'success' : 'secondary'"
+          />
+        </div>
+        <div class="info-row">
+          <label>{{ 'PARENTS.NOTIFY_EVENTS' | translate }}</label>
+          <p-tag
+            [value]="parent.notifyEvents ? ('PARENTS.YES' | translate) : ('PARENTS.NO' | translate)"
+            [severity]="parent.notifyEvents ? 'success' : 'secondary'"
+          />
+        </div>
+        <div class="info-row">
+          <label>{{ 'PARENTS.NOTIFY_EXAMS' | translate }}</label>
+          <p-tag
+            [value]="parent.notifyExams ? ('PARENTS.YES' | translate) : ('PARENTS.NO' | translate)"
+            [severity]="parent.notifyExams ? 'success' : 'secondary'"
+          />
+        </div>
+      </div>
+    </p-card>
+
+  </div>
+
+  <!-- Action Buttons -->
+  <div class="action-bar">
+    <p-button icon="pi pi-pencil" [label]="'PARENTS.EDIT' | translate" (onClick)="onEdit()" class="mr-2" />
+    <p-button icon="pi pi-refresh" [label]="'PARENTS.RESET_PASSWORD' | translate" severity="secondary" (onClick)="onResetPassword()" class="mr-2" />
+    <p-button
+      [icon]="parent.isActive ? 'pi pi-times' : 'pi pi-check'"
+      [label]="parent.isActive ? ('PARENTS.DEACTIVATE' | translate) : ('PARENTS.ACTIVATE' | translate)"
+      [severity]="parent.isActive ? 'warn' : 'success'"
+      (onClick)="onToggleActive()"
+      class="mr-2"
+    />
+    <p-button icon="pi pi-trash" [label]="'COMMON.DELETE' | translate" severity="danger" (onClick)="onDelete()" />
+  </div>
+
+</div>
+
+<ng-template #notFound>
+  <div class="not-found">
+    <p>{{ 'COMMON.NO_DATA' | translate }}</p>
+    <p-button [label]="'SETUP.BACK_TO_LIST' | translate" (onClick)="goBack()" />
+  </div>
+</ng-template>
+
+<!-- Reset Password Dialog -->
+<p-dialog
+  [(visible)]="showPasswordDialog"
+  [header]="'PARENTS.RESET_PASSWORD_SUCCESS' | translate"
+  [modal]="true"
+  [closable]="true"
+  [style]="{ width: '420px' }"
+>
+  <div class="credentials-body">
+    <p class="credentials-note">{{ 'PARENTS.CREDENTIALS_NOTE' | translate }}</p>
+    <div class="credential-row">
+      <label>{{ 'PARENTS.NEW_PASSWORD' | translate }}:</label>
+      <strong>{{ newPassword }}</strong>
+    </div>
+  </div>
+  <ng-template pTemplate="footer">
+    <p-button icon="pi pi-copy" [label]="'PARENTS.COPY_CREDENTIALS' | translate" severity="secondary" (onClick)="copyPassword()" />
+    <p-button [label]="'COMMON.CANCEL' | translate" (onClick)="showPasswordDialog = false" />
+  </ng-template>
+</p-dialog>

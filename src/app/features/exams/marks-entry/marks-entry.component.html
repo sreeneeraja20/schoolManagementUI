@@ -1,0 +1,166 @@
+<div class="marks-page">
+  <div class="page-header">
+    <div class="header-left">
+      <p-button icon="pi pi-arrow-left" severity="secondary" [rounded]="true" [text]="true" (click)="goBack()"></p-button>
+      <nav class="breadcrumb">
+        <span class="breadcrumb-link" (click)="goBack()">{{ 'EXAMS.TITLE' | translate }}</span>
+        <span class="breadcrumb-sep"> &gt; </span>
+        <span>{{ 'EXAMS.MARKS_ENTRY' | translate }}</span>
+      </nav>
+    </div>
+  </div>
+
+  @if (exam) {
+    <!-- Exam Info -->
+    <p-card styleClass="exam-info-card">
+      <div class="exam-info-grid">
+        <div class="info-item">
+          <span class="info-label">{{ 'EXAMS.NAME' | translate }}</span>
+          <span class="info-value">{{ exam.name }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">{{ 'EXAMS.CLASS' | translate }}</span>
+          <span class="info-value">{{ className }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">{{ 'EXAMS.DATE_RANGE' | translate }}</span>
+          <span class="info-value">{{ exam.startDate }} — {{ exam.endDate }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">{{ 'EXAMS.MAX_MARKS' | translate }}</span>
+          <span class="info-value">{{ exam.maxMarks }}</span>
+        </div>
+      </div>
+    </p-card>
+
+    <!-- Subject Selection -->
+    <p-card [header]="'EXAMS.SELECT_SUBJECT' | translate" styleClass="subject-card">
+      <div class="subject-selector">
+        <p-dropdown
+          [options]="subjectOptions"
+          [(ngModel)]="selectedExamSubjectId"
+          optionLabel="label"
+          optionValue="value"
+          [placeholder]="'EXAMS.SELECT_SUBJECT' | translate"
+          (onChange)="onSubjectChange($event.value)"
+          styleClass="subject-dropdown">
+        </p-dropdown>
+
+        <div class="subject-status-row">
+          @for (opt of subjectOptions; track opt.value) {
+            <div class="subject-status-item">
+              <p-tag
+                [value]="opt.label"
+                [severity]="getSubjectStatusSeverity(opt.value)"
+                [style]="{'cursor':'pointer'}"
+                (click)="onSubjectChange(opt.value)">
+              </p-tag>
+            </div>
+          }
+        </div>
+      </div>
+    </p-card>
+
+    <!-- Marks Table -->
+    @if (selectedExamSubjectId && rows.length > 0) {
+      <p-card [header]="'EXAMS.MARKS_ENTRY' | translate">
+        <p-table [value]="rows" [loading]="loading" styleClass="p-datatable-sm" [tableStyle]="{'min-width': '600px'}">
+          <ng-template pTemplate="header">
+            <tr>
+              <th>{{ 'EXAMS.ROLL_NUMBER' | translate }}</th>
+              <th>{{ 'EXAMS.STUDENT_NAME' | translate }}</th>
+              <th>{{ 'EXAMS.MARKS_OBTAINED' | translate }} (/ {{ selectedExamSubject?.maxMarks ?? exam.maxMarks }})</th>
+              <th>{{ 'EXAMS.ABSENT' | translate }}</th>
+              <th>{{ 'EXAMS.REMARKS' | translate }}</th>
+              <th></th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-row>
+            <tr>
+              <td>{{ row.rollNumber }}</td>
+              <td>{{ row.name }}</td>
+              <td>
+                <p-inputNumber
+                  [(ngModel)]="row.marksObtained"
+                  [min]="0"
+                  [max]="selectedExamSubject?.maxMarks ?? exam.maxMarks"
+                  [disabled]="row.isAbsent"
+                  (ngModelChange)="onMarksChange()"
+                  [inputStyle]="{'width':'80px'}">
+                </p-inputNumber>
+              </td>
+              <td>
+                <p-checkbox
+                  [(ngModel)]="row.isAbsent"
+                  [binary]="true"
+                  (ngModelChange)="onAbsentChange(row)">
+                </p-checkbox>
+              </td>
+              <td>
+                <input
+                  pInputText
+                  [(ngModel)]="row.remarks"
+                  [placeholder]="'EXAMS.REMARKS' | translate"
+                  style="width:150px" />
+              </td>
+              <td>
+                <p-button
+                  icon="pi pi-file"
+                  [text]="true"
+                  [rounded]="true"
+                  severity="info"
+                  [pTooltip]="'EXAMS.VIEW_REPORT' | translate"
+                  (click)="goToReportCard(row.studentId)">
+                </p-button>
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+
+        <div class="save-row">
+          <p-button
+            icon="pi pi-save"
+            [label]="'EXAMS.SAVE_MARKS' | translate"
+            (click)="saveMarks()">
+          </p-button>
+        </div>
+      </p-card>
+
+      <!-- Summary -->
+      <p-card [header]="'EXAMS.SUMMARY' | translate">
+        <div class="summary-grid">
+          <div class="summary-item">
+            <span class="sum-label">{{ 'EXAMS.TOTAL_STUDENTS' | translate }}</span>
+            <span class="sum-value">{{ totalStudents }}</span>
+          </div>
+          <div class="summary-item">
+            <span class="sum-label">{{ 'EXAMS.MARKS_ENTERED' | translate }}</span>
+            <span class="sum-value">{{ marksEnteredCount }}</span>
+          </div>
+          <div class="summary-item">
+            <span class="sum-label">{{ 'EXAMS.AVERAGE_MARKS' | translate }}</span>
+            <span class="sum-value">{{ averageMarks }}</span>
+          </div>
+          <div class="summary-item">
+            <span class="sum-label">{{ 'EXAMS.HIGHEST_MARKS' | translate }}</span>
+            <span class="sum-value">{{ highestMarks }}</span>
+          </div>
+          <div class="summary-item">
+            <span class="sum-label">{{ 'EXAMS.LOWEST_MARKS' | translate }}</span>
+            <span class="sum-value">{{ lowestMarks }}</span>
+          </div>
+          <div class="summary-item">
+            <span class="sum-label">{{ 'EXAMS.PASS_PERCENT' | translate }}</span>
+            <span class="sum-value pass">{{ passPercent }}%</span>
+          </div>
+          <div class="summary-item">
+            <span class="sum-label">{{ 'EXAMS.FAIL_PERCENT' | translate }}</span>
+            <span class="sum-value fail">{{ failPercent }}%</span>
+          </div>
+        </div>
+      </p-card>
+    }
+  }
+
+  <p-toast></p-toast>
+</div>

@@ -1,0 +1,17 @@
+.list-page {
+  padding: 1.5rem;
+
+  .page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+
+    h1 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin: 0;
+      color: var(--primary-color);
+    }
+  }
+}

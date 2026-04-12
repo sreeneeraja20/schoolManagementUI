@@ -1,0 +1,91 @@
+<div class="dashboard-page">
+  <div class="page-header">
+    <h1>{{ 'DASHBOARD.TITLE' | translate }}</h1>
+  </div>
+
+  <!-- Summary Cards -->
+  <div class="stats-grid">
+    <div class="stat-card students" (click)="navigate('students')">
+      <div class="stat-icon"><i class="pi pi-users"></i></div>
+      <div class="stat-info">
+        <span class="stat-value">{{ totalStudents }}</span>
+        <span class="stat-label">{{ 'DASHBOARD.TOTAL_STUDENTS' | translate }}</span>
+      </div>
+    </div>
+
+    @if (isAdmin) {
+      <div class="stat-card staff" (click)="navigate('staff')">
+        <div class="stat-icon"><i class="pi pi-user-edit"></i></div>
+        <div class="stat-info">
+          <span class="stat-value">{{ totalStaff }}</span>
+          <span class="stat-label">{{ 'DASHBOARD.TOTAL_STAFF' | translate }}</span>
+        </div>
+      </div>
+    }
+
+    <div class="stat-card attendance" (click)="navigate('attendance')">
+      <div class="stat-icon"><i class="pi pi-check-circle"></i></div>
+      <div class="stat-info">
+        <span class="stat-value">{{ todayAttendancePercent }}%</span>
+        <span class="stat-label">{{ 'DASHBOARD.TODAY_ATTENDANCE' | translate }}</span>
+      </div>
+    </div>
+
+    <div class="stat-card events" (click)="navigate('events')">
+      <div class="stat-icon"><i class="pi pi-calendar"></i></div>
+      <div class="stat-info">
+        <span class="stat-value">{{ upcomingEventsCount }}</span>
+        <span class="stat-label">{{ 'DASHBOARD.UPCOMING_EVENTS' | translate }}</span>
+      </div>
+    </div>
+
+    <div class="stat-card exams" (click)="navigate('exams')">
+      <div class="stat-icon"><i class="pi pi-file-edit"></i></div>
+      <div class="stat-info">
+        <span class="stat-value">{{ upcomingExamsCount }}</span>
+        <span class="stat-label">{{ 'EXAMS.UPCOMING_EXAMS' | translate }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick Actions -->
+  <p-card [header]="'DASHBOARD.QUICK_ACTIONS' | translate">
+    <div class="quick-actions">
+      <p-button
+        icon="pi pi-check-circle"
+        [label]="'DASHBOARD.MARK_ATTENDANCE' | translate"
+        (click)="navigate('attendance')"
+        severity="success">
+      </p-button>
+      <p-button
+        icon="pi pi-user-plus"
+        [label]="'DASHBOARD.ADD_STUDENT' | translate"
+        (click)="navigate('students/create')"
+        severity="info">
+      </p-button>
+      <p-button
+        icon="pi pi-table"
+        [label]="'DASHBOARD.VIEW_TIMETABLE' | translate"
+        (click)="navigate('timetable')"
+        severity="secondary">
+      </p-button>
+    </div>
+  </p-card>
+
+  <!-- Upcoming Events -->
+  @if (upcomingEvents.length > 0) {
+    <p-card [header]="'DASHBOARD.UPCOMING_EVENTS_LIST' | translate">
+      <div class="events-list">
+        @for (event of upcomingEvents; track event.id) {
+          <div class="event-row">
+            <p-tag [value]="event.type | titlecase" [severity]="getEventSeverity(event.type)"></p-tag>
+            <div class="event-info">
+              <strong>{{ event.title }}</strong>
+              <small>{{ event.startDate | date:'mediumDate' }}</small>
+            </div>
+          </div>
+        }
+      </div>
+    </p-card>
+  }
+</div>

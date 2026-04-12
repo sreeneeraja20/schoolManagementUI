@@ -1,0 +1,24 @@
+<div class="form-page">
+  <p-toast></p-toast>
+  <div class="page-header">
+    <div class="header-left">
+      <p-button icon="pi pi-arrow-left" severity="secondary" [rounded]="true" [text]="true" (click)="goBack()"></p-button>
+      <nav class="breadcrumb">
+        <span>{{ 'SETUP.TITLE' | translate }}</span>
+        <i class="pi pi-angle-right"></i>
+        <span>{{ 'SETUP.ACADEMIC_YEARS' | translate }}</span>
+        <i class="pi pi-angle-right"></i>
+        <span class="active">{{ pageTitle }}</span>
+      </nav>
+    </div>
+  </div>
+  <p-card [header]="pageTitle">
+    <app-dynamic-form
+      [config]="formConfig"
+      [initialValues]="initialValues"
+      (formSubmit)="onSubmit($event)"
+      (formChange)="onFormChange($event)"
+      (formCancel)="onCancel()">
+    </app-dynamic-form>
+  </p-card>
+</div>

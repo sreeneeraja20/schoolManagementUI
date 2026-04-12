@@ -1,0 +1,14 @@
+<p-toast></p-toast>
+<div class="layout-wrapper">
+  <app-sidebar
+    [(collapsed)]="sidebarCollapsed"
+    [(mobileOpen)]="sidebarMobileOpen">
+  </app-sidebar>
+  <div class="layout-main" [class.sidebar-collapsed]="sidebarCollapsed">
+    <app-header (toggleSidebar)="sidebarMobileOpen = !sidebarMobileOpen"></app-header>
+    <div class="layout-content">
+      <app-breadcrumb></app-breadcrumb>
+      <router-outlet></router-outlet>
+    </div>
+  </div>
+</div>

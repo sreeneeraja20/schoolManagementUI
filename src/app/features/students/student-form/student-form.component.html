@@ -1,0 +1,32 @@
+<div class="form-page">
+  <p-toast></p-toast>
+  <div class="page-header">
+    <div class="header-left">
+      <p-button icon="pi pi-arrow-left" severity="secondary" [rounded]="true" [text]="true" (click)="goBack()"></p-button>
+      <nav class="breadcrumb">
+        <span class="breadcrumb-link" (click)="goBack()">{{ 'STUDENTS.TITLE' | translate }}</span>
+        <span class="breadcrumb-sep"> &gt; </span>
+        <span>{{ pageTitle }}</span>
+      </nav>
+    </div>
+  </div>
+  <p-card [header]="pageTitle">
+    <div class="photo-upload-section">
+      <app-image-upload
+        [imageUrl]="photoUrl || null"
+        [label]="'STUDENTS.UPLOAD_PHOTO' | translate"
+        (imageChange)="photoUrl = $event"
+        (imageRemove)="photoUrl = ''">
+      </app-image-upload>
+    </div>
+    @if (formConfig) {
+      <app-dynamic-form
+        [config]="formConfig"
+        [initialValues]="initialValues"
+        (formSubmit)="onSubmit($event)"
+        (formCancel)="onCancel()"
+        (formChange)="onFormChange($event)">
+      </app-dynamic-form>
+    }
+  </p-card>
+</div>

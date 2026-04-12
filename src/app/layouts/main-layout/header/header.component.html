@@ -1,0 +1,20 @@
+<header class="app-header">
+  <div class="header-left">
+    <p-button icon="pi pi-bars" [text]="true" (onClick)="toggleSidebar.emit()" class="mobile-only"></p-button>
+  </div>
+  <div class="header-right">
+    <div class="lang-switcher">
+      <button class="lang-btn" [class.active]="currentLang === 'en'" (click)="setLang('en')">EN</button>
+      <span>|</span>
+      <button class="lang-btn" [class.active]="currentLang === 'ta'" (click)="setLang('ta')">தமிழ்</button>
+    </div>
+    <div class="user-menu">
+      <div class="user-avatar" (click)="menu.toggle($event)">
+        <span class="avatar-initials">{{ userInitials }}</span>
+        <span class="user-name">{{ userName }}</span>
+        <i class="pi pi-chevron-down"></i>
+      </div>
+      <p-menu #menu [model]="userMenuItems" appendTo="body" [popup]="true"></p-menu>
+    </div>
+  </div>
+</header>

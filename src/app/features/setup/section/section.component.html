@@ -1,0 +1,91 @@
+<div class="crud-page">
+  <p-toast></p-toast>
+  <p-confirmDialog></p-confirmDialog>
+
+  <div class="page-header">
+    <div class="header-left">
+      <p-button icon="pi pi-arrow-left" severity="secondary" [rounded]="true" [text]="true" (click)="goBack()"></p-button>
+      <h1>{{ 'SETUP.SECTIONS' | translate }}</h1>
+    </div>
+    @if (classes().length > 0) {
+      <p-button icon="pi pi-plus" [label]="'SETUP.ADD' | translate" (click)="openAddDialog()"></p-button>
+    }
+  </div>
+
+  @if (classes().length === 0) {
+    <app-setup-banner [message]="'SETUP.DEPENDENCY_CLASSES' | translate"></app-setup-banner>
+  } @else {
+    <div class="filter-row">
+      <p-dropdown
+        [options]="classFilterOptions"
+        [ngModel]="selectedClassFilter"
+        (ngModelChange)="onClassFilterChange($event)"
+        optionLabel="label"
+        optionValue="value"
+        [placeholder]="'SETUP.CLASS' | translate">
+      </p-dropdown>
+    </div>
+
+    <div class="table-container">
+      <p-table [value]="filteredSections()" [loading]="loading" [sortMode]="'multiple'" [paginator]="true" [rows]="10" [globalFilterFields]="['name']" #dt>
+        <ng-template pTemplate="caption">
+          <div class="table-caption">
+            <span class="p-input-icon-left">
+              <i class="pi pi-search"></i>
+              <input pInputText type="text" (input)="dt.filterGlobal($any($event.target).value, 'contains')" [placeholder]="'SETUP.SEARCH' | translate" />
+            </span>
+          </div>
+        </ng-template>
+        <ng-template pTemplate="header">
+          <tr>
+            <th pSortableColumn="name">{{ 'SETUP.NAME' | translate }} <p-sortIcon field="name"></p-sortIcon></th>
+            <th>{{ 'SETUP.CLASS' | translate }}</th>
+            <th pSortableColumn="maxStudents">{{ 'SETUP.MAX_STUDENTS' | translate }} <p-sortIcon field="maxStudents"></p-sortIcon></th>
+            <th>{{ 'SETUP.ACTIONS' | translate }}</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-item>
+          <tr>
+            <td>{{ item.name }}</td>
+            <td>{{ getClassName(item.classId) }}</td>
+            <td>{{ item.maxStudents ?? 40 }}</td>
+            <td>
+              <p-button icon="pi pi-pencil" severity="info" [rounded]="true" [text]="true" (click)="openEditDialog(item)"></p-button>
+              <p-button icon="pi pi-trash" severity="danger" [rounded]="true" [text]="true" (click)="confirmDelete(item)"></p-button>
+            </td>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage">
+          <tr><td colspan="4" class="text-center">{{ 'SETUP.NO_DATA' | translate }}</td></tr>
+        </ng-template>
+      </p-table>
+    </div>
+  }
+
+  <p-dialog [(visible)]="dialogVisible" [header]="(isEditMode() ? 'SETUP.EDIT' : 'SETUP.ADD') | translate" [modal]="true" [style]="{ width: '420px' }">
+    <form [formGroup]="form">
+      <div class="form-field">
+        <label>{{ 'SETUP.NAME' | translate }} *</label>
+        <input pInputText formControlName="name" class="w-full" />
+        @if (form.get('name')?.touched && form.get('name')?.hasError('required')) {
+          <small class="p-error">{{ 'SETUP.VALIDATION_NAME_REQUIRED' | translate }}</small>
+        }
+      </div>
+      <div class="form-field">
+        <label>{{ 'SETUP.CLASS' | translate }} *</label>
+        <p-dropdown formControlName="classId" [options]="classOptions" optionLabel="label" optionValue="value" [placeholder]="'SETUP.CLASS' | translate" styleClass="w-full"></p-dropdown>
+        @if (form.get('classId')?.touched && form.get('classId')?.hasError('required')) {
+          <small class="p-error">{{ 'SETUP.VALIDATION_CLASS_REQUIRED' | translate }}</small>
+        }
+      </div>
+      <div class="form-field">
+        <label>{{ 'SETUP.MAX_STUDENTS' | translate }}</label>
+        <p-inputNumber formControlName="maxStudents" [min]="1" styleClass="w-full"></p-inputNumber>
+      </div>
+    </form>
+    <ng-template pTemplate="footer">
+      <p-button [label]="'SETUP.CANCEL' | translate" severity="secondary" (click)="dialogVisible = false"></p-button>
+      <p-button [label]="'SETUP.SAVE' | translate" (click)="save()"></p-button>
+    </ng-template>
+  </p-dialog>
+</div>

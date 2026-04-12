@@ -1,0 +1,46 @@
+<div class="list-page">
+  <p-toast></p-toast>
+  <p-confirmDialog></p-confirmDialog>
+  <div class="page-header">
+    <h1>{{ 'STAFF.TITLE' | translate }}</h1>
+    <div class="header-actions">
+      <p-button
+        icon="pi pi-upload"
+        [label]="'IMPORT.BUTTON' | translate"
+        severity="secondary"
+        (click)="showImportDialog = true">
+      </p-button>
+      <p-button
+        icon="pi pi-file-excel"
+        [label]="'EXPORT.CSV' | translate"
+        severity="secondary"
+        [disabled]="data.length === 0"
+        (click)="onExportCsv()">
+      </p-button>
+      <p-button
+        icon="pi pi-print"
+        [label]="'EXPORT.PRINT' | translate"
+        severity="secondary"
+        [disabled]="data.length === 0"
+        (click)="onPrint()">
+      </p-button>
+    </div>
+  </div>
+  <app-data-table
+    [config]="tableConfig"
+    [data]="data"
+    [totalRecords]="data.length"
+    [loading]="loading"
+    (addClick)="onAdd()"
+    (viewClick)="onView($event)"
+    (editClick)="onEdit($event)"
+    (deleteClick)="onDelete($event)"
+    (filterChange)="onFilter($event)">
+  </app-data-table>
+</div>
+
+<app-csv-import-dialog
+  [(visible)]="showImportDialog"
+  [config]="importConfig"
+  (importRows)="onImportCsv($event)">
+</app-csv-import-dialog>

@@ -1,0 +1,109 @@
+.view-page {
+  padding: 1.5rem;
+
+  .page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+
+      .breadcrumb {
+        font-size: 0.9rem;
+        color: var(--p-text-muted-color, #64748b);
+
+        .breadcrumb-link {
+          cursor: pointer;
+          color: var(--p-primary-color, #6366f1);
+          &:hover { text-decoration: underline; }
+        }
+        .breadcrumb-sep { margin: 0 0.25rem; }
+      }
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+  }
+
+  .profile-section {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    margin-bottom: 1rem;
+
+    .profile-photo {
+      flex-shrink: 0;
+    }
+
+    .initials-circle {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      background-color: var(--p-primary-color, #6366f1);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      font-weight: 700;
+    }
+
+    .profile-info {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+
+      .staff-name {
+        margin: 0;
+        font-size: 1.5rem;
+        font-weight: 700;
+      }
+    }
+  }
+
+  .section-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--p-text-color, #1e293b);
+    margin-bottom: 1rem;
+  }
+
+  .detail-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+
+    .detail-item {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+
+      &--full {
+        grid-column: 1 / -1;
+      }
+
+      .detail-label {
+        font-size: 0.8rem;
+        color: var(--p-text-muted-color, #64748b);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+
+      .detail-value {
+        font-size: 0.95rem;
+        font-weight: 500;
+        color: var(--p-text-color, #1e293b);
+      }
+    }
+  }
+
+  .timetable-info {
+    color: var(--p-text-muted-color, #64748b);
+  }
+}

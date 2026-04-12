@@ -1,0 +1,127 @@
+<div class="view-page">
+  <div class="page-header">
+    <div class="header-left">
+      <p-button icon="pi pi-arrow-left" severity="secondary" [rounded]="true" [text]="true" (click)="goBack()"></p-button>
+      <nav class="breadcrumb">
+        <span class="breadcrumb-link" (click)="goBack()">{{ 'STUDENTS.TITLE' | translate }}</span>
+        <span class="breadcrumb-sep"> &gt; </span>
+        <span>{{ 'STUDENTS.VIEW' | translate }}</span>
+      </nav>
+    </div>
+    <div class="header-actions">
+      <p-button label="{{ 'COMMON.EDIT' | translate }}" icon="pi pi-pencil" (click)="onEdit()"></p-button>
+      <p-button label="{{ 'EXAMS.REPORT_CARD' | translate }}" icon="pi pi-file-edit" severity="info" (click)="goToReportCard()"></p-button>
+      <p-button label="{{ 'SETUP.BACK_TO_LIST' | translate }}" icon="pi pi-list" severity="secondary" (click)="goBack()"></p-button>
+    </div>
+  </div>
+
+  @if (student) {
+    <p-card>
+      <div class="profile-section">
+        <div class="profile-photo">
+          @if (student.photoUrl) {
+            <app-image-upload
+              [imageUrl]="student.photoUrl"
+              [readonly]="true"
+              [width]="'120px'"
+              [height]="'120px'">
+            </app-image-upload>
+          } @else {
+            <div class="initials-circle">{{ initials }}</div>
+          }
+        </div>
+        <div class="profile-info">
+          <h2 class="student-name">{{ student.name }}</h2>
+          <p class="roll-number">{{ 'STUDENTS.ROLL_NUMBER' | translate }}: <strong>{{ student.rollNumber }}</strong></p>
+          <p class="class-section">{{ className }} - {{ 'STUDENTS.SECTION' | translate }} {{ sectionName }}</p>
+        </div>
+      </div>
+
+      <p-divider></p-divider>
+
+      <h3 class="section-title">{{ 'STUDENTS.PROFILE' | translate }}</h3>
+      <div class="detail-grid">
+        <div class="detail-item">
+          <span class="detail-label">{{ 'STUDENTS.CLASS' | translate }}</span>
+          <span class="detail-value">{{ className }}</span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label">{{ 'STUDENTS.SECTION' | translate }}</span>
+          <span class="detail-value">{{ sectionName }}</span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label">{{ 'STUDENTS.GENDER' | translate }}</span>
+          <span class="detail-value">{{ getGenderLabel(student.gender) | translate }}</span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label">{{ 'STUDENTS.DATE_OF_BIRTH' | translate }}</span>
+          <span class="detail-value">{{ student.dateOfBirth | date:'mediumDate' }}</span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label">{{ 'STUDENTS.PARENT_NAME' | translate }}</span>
+          <span class="detail-value">{{ student.parentName }}</span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label">{{ 'STUDENTS.PARENT_PHONE' | translate }}</span>
+          <span class="detail-value">{{ student.parentPhone }}</span>
+        </div>
+        <div class="detail-item detail-item--full">
+          <span class="detail-label">{{ 'STUDENTS.ADDRESS' | translate }}</span>
+          <span class="detail-value">{{ student.address }}</span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label">{{ 'STUDENTS.ACADEMIC_YEAR' | translate }}</span>
+          <span class="detail-value">{{ academicYearName }}</span>
+        </div>
+      </div>
+
+      <p-divider></p-divider>
+
+      <h3 class="section-title">{{ 'STUDENTS.ATTENDANCE_SUMMARY' | translate }}</h3>
+      <div class="attendance-grid">
+        <div class="attendance-card">
+          <span class="att-value">{{ totalDays }}</span>
+          <span class="att-label">{{ 'STUDENTS.TOTAL_DAYS' | translate }}</span>
+        </div>
+        <div class="attendance-card present">
+          <span class="att-value">{{ presentPercent }}%</span>
+          <span class="att-label">{{ 'STUDENTS.PRESENT_PERCENT' | translate }}</span>
+        </div>
+        <div class="attendance-card absent">
+          <span class="att-value">{{ absentPercent }}%</span>
+          <span class="att-label">{{ 'STUDENTS.ABSENT_PERCENT' | translate }}</span>
+        </div>
+        <div class="attendance-card late">
+          <span class="att-value">{{ latePercent }}%</span>
+          <span class="att-label">{{ 'STUDENTS.LATE_PERCENT' | translate }}</span>
+        </div>
+      </div>
+
+      <p-divider></p-divider>
+
+      <h3 class="section-title">{{ 'AUDIT.AUDIT_INFO' | translate }}</h3>
+      <div class="detail-grid">
+        <div class="detail-item">
+          <span class="detail-label">{{ 'AUDIT.CREATED_BY' | translate }}</span>
+          <span class="detail-value">{{ student.createdBy || '-' }}</span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label">{{ 'AUDIT.CREATED_DATE' | translate }}</span>
+          <span class="detail-value">{{ (student.createdDate | date:'medium') || '-' }}</span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label">{{ 'AUDIT.UPDATED_BY' | translate }}</span>
+          <span class="detail-value">{{ student.updatedBy || '-' }}</span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label">{{ 'AUDIT.UPDATED_DATE' | translate }}</span>
+          <span class="detail-value">{{ (student.updatedDate | date:'medium') || '-' }}</span>
+        </div>
+      </div>
+    </p-card>
+  } @else {
+    <p-card>
+      <p>{{ 'TABLE.NO_RECORDS' | translate }}</p>
+    </p-card>
+  }
+</div>

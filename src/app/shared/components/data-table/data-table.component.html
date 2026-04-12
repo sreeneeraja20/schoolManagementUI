@@ -1,0 +1,127 @@
+<div class="data-table-wrapper">
+  <div class="table-toolbar">
+    @if (config.globalSearch !== false) {
+    <span class="p-input-icon-left search-box">
+      <i class="pi pi-search"></i>
+      <input pInputText type="text" [ngModel]="globalSearchValue" (ngModelChange)="onGlobalSearch($event)"
+        [placeholder]="'TABLE.GLOBAL_SEARCH' | translate" />
+    </span>
+    }
+    @if (config.showAddButton) {
+    <p-button icon="pi pi-plus" [label]="(config.addButtonLabel || 'COMMON.ADD') | translate"
+      (click)="addClick.emit()"></p-button>
+    }
+  </div>
+
+  <p-table [value]="data" [loading]="tableLoading" [paginator]="config.paginator !== false" [rows]="defaultRows"
+    [rowsPerPageOptions]="rowsPerPage" [totalRecords]="totalRecords" [dataKey]="dataKey" [sortMode]="'single'"
+    (onSort)="onSort($event)" (onPage)="onPage($event)" styleClass="p-datatable-gridlines p-datatable-striped"
+    [tableStyle]="{'min-width': '50rem'}">
+
+    <ng-template pTemplate="header">
+      <tr>
+        @for (col of config.columns; track col.field) {
+        <th [style.width]="col.width || ''" [pSortableColumn]="col.sortable ? col.field : ''">
+          {{ col.header | translate }}
+          @if (col.sortable) {
+          <p-sortIcon [field]="col.field"></p-sortIcon>
+          }
+        </th>
+        }
+        @if (config.actions?.length) {
+        <th style="width: 120px">{{ 'SETUP.ACTIONS' | translate }}</th>
+        }
+      </tr>
+      @if (hasFilterableColumns()) {
+      <tr>
+        @for (col of config.columns; track col.field) {
+        <th>
+          @if (col.filterable) {
+          @switch (col.filterType) {
+          @case ('dropdown') {
+          <p-dropdown [options]="col.filterOptions || []" [ngModel]="columnFilters[col.field]"
+            (ngModelChange)="onColumnFilter(col.field, $event)" [placeholder]="'COMMON.SEARCH' | translate"
+            [showClear]="true" styleClass="w-full filter-dropdown"></p-dropdown>
+          }
+          @case ('boolean') {
+          <p-dropdown [options]="booleanOptions" [ngModel]="columnFilters[col.field]"
+            (ngModelChange)="onColumnFilter(col.field, $event)" [placeholder]="'COMMON.SEARCH' | translate"
+            [showClear]="true" styleClass="w-full filter-dropdown"></p-dropdown>
+          }
+          @case ('date') {
+          <p-calendar [ngModel]="columnFilters[col.field]" (ngModelChange)="onColumnFilter(col.field, $event)"
+            [showIcon]="true" dateFormat="dd/mm/yy" styleClass="w-full filter-calendar"></p-calendar>
+          }
+          @case ('multiSelect') {
+          <p-multiSelect [options]="col.filterOptions || []" [ngModel]="columnFilters[col.field]"
+            (ngModelChange)="onColumnFilter(col.field, $event)" [placeholder]="'COMMON.SEARCH' | translate"
+            styleClass="w-full"></p-multiSelect>
+          }
+          @default {
+          <input pInputText type="text" [ngModel]="columnFilters[col.field]"
+            (ngModelChange)="onColumnFilter(col.field, $event)" [placeholder]="'COMMON.SEARCH' | translate"
+            class="w-full filter-input" />
+          }
+          }
+          }
+        </th>
+        }
+        @if (config.actions?.length) {
+        <th></th>
+        }
+      </tr>
+      }
+    </ng-template>
+
+    <ng-template pTemplate="body" let-row>
+      <tr>
+        @for (col of config.columns; track col.field) {
+        <td>
+          @switch (col.type) {
+          @case ('badge') {
+          <p-tag [value]="getBadgeLabel(col, row[col.field])"
+            [severity]="getBadgeSeverity(col, row[col.field])"></p-tag>
+          }
+          @case ('date') {
+          {{ row[col.field] | date:(col.dateFormat || 'mediumDate') }}
+          }
+          @case ('list') {
+          {{ getListValue(row[col.field]) }}
+          }
+          @default {
+          {{ row[col.field] }}
+          }
+          }
+        </td>
+        }
+        @if (config.actions?.length) {
+        <td class="action-col">
+          <p-button icon="pi pi-ellipsis-v" (click)="onMenuClick($event, row)">
+          </p-button>
+
+        </td>
+        }
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="emptymessage">
+      <tr>
+        <td [attr.colspan]="config.columns.length + (config.actions?.length ? 1 : 0)" class="empty-msg">
+          <div class="empty-msg-content">
+            {{ (config.emptyMessage || 'TABLE.NO_RECORDS') | translate }}
+          </div>
+        </td>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="footer">
+      @if (spacerRows > 0) {
+      <tr class="table-spacer-row" aria-hidden="true">
+        <td [attr.colspan]="config.columns.length + (config.actions?.length ? 1 : 0)" class="table-spacer-cell">
+          <div class="table-spacer" [style.height.rem]="spacerHeightRem"></div>
+        </td>
+      </tr>
+      }
+    </ng-template>
+  </p-table>
+  <p-menu #menu [model]="menuItems" [popup]="true" appendTo="body">
+  </p-menu>
+</div>

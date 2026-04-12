@@ -1,0 +1,47 @@
+<div class="image-upload-container">
+  <div
+    class="image-preview"
+    [class.drag-over]="isDragOver"
+    [class.readonly]="readonly"
+    [style.width]="width"
+    [style.height]="height"
+    (click)="openFilePicker()"
+    (dragover)="onDragOver($event)"
+    (dragleave)="onDragLeave()"
+    (drop)="onDrop($event)"
+    [attr.role]="readonly ? null : 'button'"
+    [attr.tabindex]="readonly ? null : 0"
+    (keydown.enter)="openFilePicker()"
+    (keydown.space)="onSpaceKey($event)">
+    @if (imageUrl) {
+      <img [src]="imageUrl" alt="Preview" class="preview-img" />
+    } @else {
+      <div class="placeholder">
+        <i class="pi pi-user"></i>
+        <span class="upload-hint">{{ label }}</span>
+      </div>
+    }
+  </div>
+
+  <input
+    #fileInput
+    type="file"
+    [accept]="acceptTypes"
+    style="display: none"
+    (change)="onFileSelected($event)" />
+
+  @if (imageUrl && !readonly) {
+    <p-button
+      label="{{ removeLabel | translate }}"
+      severity="danger"
+      [text]="true"
+      size="small"
+      icon="pi pi-trash"
+      (click)="removeImage()">
+    </p-button>
+  }
+
+  @if (errorMessage) {
+    <div class="error-message">{{ errorMessage | translate }}</div>
+  }
+</div>

@@ -1,0 +1,110 @@
+.parent-view-page {
+  padding: 1.5rem;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+
+  h2 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+  }
+}
+
+.view-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.info-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.info-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+
+  label {
+    font-weight: 600;
+    min-width: 160px;
+    color: var(--text-color-secondary);
+    font-size: 0.9rem;
+  }
+}
+
+.student-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--surface-border);
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  .student-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .student-name {
+    font-weight: 600;
+  }
+
+  .student-meta {
+    font-size: 0.85rem;
+    color: var(--text-color-secondary);
+  }
+}
+
+.action-bar {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-top: 1rem;
+}
+
+.not-found {
+  padding: 2rem;
+  text-align: center;
+}
+
+.no-data {
+  color: var(--text-color-secondary);
+  font-style: italic;
+}
+
+.credentials-body {
+  .credentials-note {
+    color: var(--text-color-secondary);
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+  }
+
+  .credential-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+
+    label {
+      font-weight: 600;
+      min-width: 120px;
+    }
+  }
+}

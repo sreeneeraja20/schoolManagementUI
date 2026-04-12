@@ -1,0 +1,22 @@
+[
+  {
+    "id": "user-001",
+    "tenantId": "tenant-001",
+    "email": "admin@greenvalley.edu",
+    "password": "admin123",
+    "role": "ADMIN",
+    "name": "Admin User",
+    "staffId": "STAFF-001",
+    "isFirstLogin": false
+  },
+  {
+    "id": "user-002",
+    "tenantId": "tenant-001",
+    "email": "teacher@greenvalley.edu",
+    "password": "teacher123",
+    "role": "TEACHER",
+    "name": "Teacher User",
+    "staffId": "STAFF-002",
+    "isFirstLogin": false
+  }
+]

@@ -1,0 +1,37 @@
+<div class="login-wrapper">
+  <div class="login-left">
+    <div class="login-form-container">
+      <div class="school-header">
+        <img [src]="tenantLogo" [alt]="schoolName" class="school-logo" (error)="onImgError($event)">
+        <h1 class="school-name">{{ schoolName }}</h1>
+      </div>
+      <h2>{{ 'LOGIN.TITLE' | translate }}</h2>
+      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+        <div class="form-field">
+          <label for="email">{{ 'LOGIN.EMAIL' | translate }}</label>
+          <input id="email" type="email" pInputText formControlName="email" [placeholder]="'LOGIN.EMAIL' | translate" class="w-full">
+          <small class="error" *ngIf="loginForm.get('email')?.invalid && loginForm.get('email')?.touched">
+            Valid email required
+          </small>
+        </div>
+        <div class="form-field">
+          <label for="password">{{ 'LOGIN.PASSWORD' | translate }}</label>
+          <p-password id="password" formControlName="password" [feedback]="false" [toggleMask]="true" styleClass="w-full" inputStyleClass="w-full" [placeholder]="'LOGIN.PASSWORD' | translate"></p-password>
+          <small class="error" *ngIf="loginForm.get('password')?.invalid && loginForm.get('password')?.touched">
+            Password required
+          </small>
+        </div>
+        <div class="form-field checkbox-field">
+          <p-checkbox formControlName="rememberMe" [binary]="true" inputId="rememberMe"></p-checkbox>
+          <label for="rememberMe">{{ 'LOGIN.REMEMBER_ME' | translate }}</label>
+        </div>
+        <p-button type="submit" [label]="'LOGIN.LOGIN_BUTTON' | translate" styleClass="w-full" [loading]="loading" class="login-btn"></p-button>
+        <div class="forgot-link">
+          <a [routerLink]="'/' + tenantSlug + '/forgot-password'">{{ 'LOGIN.FORGOT_PASSWORD' | translate }}</a>
+        </div>
+      </form>
+    </div>
+  </div>
+  <div class="login-right" [style.background-image]="bgImageStyle" [style.background]="bgFallback">
+  </div>
+</div>

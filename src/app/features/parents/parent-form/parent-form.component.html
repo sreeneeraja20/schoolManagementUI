@@ -1,0 +1,51 @@
+<p-toast />
+
+<div class="parent-form-page">
+  <div class="page-header">
+    <h2>{{ pageTitle }}</h2>
+  </div>
+
+  <p-card>
+    <app-dynamic-form
+      [config]="formConfig"
+      [initialValues]="initialValues"
+      (formSubmit)="onSubmit($event)"
+      (formChange)="onFormChange($event)"
+      (formCancel)="onCancel()"
+    />
+  </p-card>
+</div>
+
+<!-- Credentials Dialog (shown after create) -->
+<p-dialog
+  [(visible)]="showCredentialsDialog"
+  [header]="'PARENTS.CREDENTIALS_TITLE' | translate"
+  [modal]="true"
+  [closable]="false"
+  [style]="{ width: '460px' }"
+>
+  <div class="credentials-body">
+    <p class="credentials-note">{{ 'PARENTS.CREDENTIALS_NOTE' | translate }}</p>
+    <div class="credential-row">
+      <label>{{ 'PARENTS.EMAIL' | translate }}:</label>
+      <span>{{ generatedEmail }}</span>
+    </div>
+    <div class="credential-row">
+      <label>{{ 'PARENTS.NEW_PASSWORD' | translate }}:</label>
+      <strong>{{ generatedPassword }}</strong>
+    </div>
+  </div>
+  <ng-template pTemplate="footer">
+    <p-button
+      icon="pi pi-copy"
+      [label]="'PARENTS.COPY_CREDENTIALS' | translate"
+      severity="secondary"
+      (onClick)="copyCredentials()"
+      class="mr-2"
+    />
+    <p-button
+      [label]="'COMMON.CANCEL' | translate"
+      (onClick)="onCredentialsClose()"
+    />
+  </ng-template>
+</p-dialog>

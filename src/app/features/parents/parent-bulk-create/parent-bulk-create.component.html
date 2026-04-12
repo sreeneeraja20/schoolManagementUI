@@ -1,0 +1,208 @@
+<p-toast />
+
+<div class="bulk-create-page">
+  <div class="page-header">
+    <h2>{{ 'PARENTS.BULK_CREATE_TITLE' | translate }}</h2>
+    <p-button icon="pi pi-arrow-left" [label]="'SETUP.BACK_TO_LIST' | translate" severity="secondary" (onClick)="goBack()" />
+  </div>
+
+  <!-- Step Indicator -->
+  <div class="step-indicator">
+    <div class="step" [class.active]="currentStep >= 1" [class.done]="currentStep > 1">
+      <span class="step-num">1</span>
+      <span class="step-label">{{ 'PARENTS.BULK.SELECT_CLASS' | translate }}</span>
+    </div>
+    <div class="step-divider"></div>
+    <div class="step" [class.active]="currentStep >= 2" [class.done]="currentStep > 2">
+      <span class="step-num">2</span>
+      <span class="step-label">Select Students</span>
+    </div>
+    <div class="step-divider"></div>
+    <div class="step" [class.active]="currentStep >= 3" [class.done]="currentStep > 3">
+      <span class="step-num">3</span>
+      <span class="step-label">{{ 'PARENTS.BULK.PASSWORD_STRATEGY' | translate }}</span>
+    </div>
+    <div class="step-divider"></div>
+    <div class="step" [class.active]="currentStep >= 4">
+      <span class="step-num">4</span>
+      <span class="step-label">Results</span>
+    </div>
+  </div>
+
+  <!-- Step 1: Select Class/Section -->
+  <p-card *ngIf="currentStep === 1">
+    <h3>{{ 'PARENTS.BULK.SELECT_CLASS' | translate }}</h3>
+    <div class="form-row">
+      <div class="form-field">
+        <label>{{ 'SETUP.CLASS' | translate }}</label>
+        <p-dropdown
+          [options]="classOptions"
+          [(ngModel)]="selectedClassId"
+          [placeholder]="'PARENTS.BULK.SELECT_CLASS' | translate"
+          (onChange)="onClassChange()"
+          styleClass="w-full"
+        />
+      </div>
+      <div class="form-field">
+        <label>{{ 'SETUP.SECTIONS' | translate }}</label>
+        <p-dropdown
+          [options]="sectionOptions"
+          [(ngModel)]="selectedSectionId"
+          [placeholder]="'PARENTS.BULK.SELECT_SECTION' | translate"
+          styleClass="w-full"
+        />
+      </div>
+    </div>
+    <div class="step-actions">
+      <p-button
+        [label]="'PARENTS.BULK.LOAD_STUDENTS' | translate"
+        icon="pi pi-search"
+        (onClick)="loadStudents()"
+        [disabled]="!selectedClassId"
+      />
+    </div>
+  </p-card>
+
+  <!-- Step 2: Select Students -->
+  <p-card *ngIf="currentStep === 2">
+    <div class="step-header">
+      <h3>Select Students ({{ selectedCount }} selected)</h3>
+      <p-button label="Back" icon="pi pi-arrow-left" severity="secondary" size="small" (onClick)="currentStep = 1" />
+    </div>
+
+    <p-table [value]="studentRows" [loading]="loading" [scrollable]="true" scrollHeight="400px">
+      <ng-template pTemplate="header">
+        <tr>
+          <th style="width: 50px">
+            <p-checkbox [(ngModel)]="selectAll" [binary]="true" (onChange)="toggleSelectAll()" />
+          </th>
+          <th>{{ 'PARENTS.BULK.STUDENT_NAME' | translate }}</th>
+          <th>Class</th>
+          <th>Section</th>
+          <th>{{ 'PARENTS.BULK.PARENT_NAME' | translate }}</th>
+          <th>{{ 'PARENTS.BULK.PARENT_PHONE' | translate }}</th>
+          <th>{{ 'PARENTS.BULK.PARENT_EMAIL' | translate }}</th>
+          <th>Status</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-row>
+        <tr [class.row-warning]="row.hasMissingEmail" [class.row-exists]="row.alreadyExists">
+          <td>
+            <p-checkbox
+              [(ngModel)]="row.selected"
+              [binary]="true"
+              [disabled]="row.alreadyExists || row.hasMissingEmail"
+            />
+          </td>
+          <td>{{ row.name }} ({{ row.rollNumber }})</td>
+          <td>{{ row.className }}</td>
+          <td>{{ row.sectionName }}</td>
+          <td>{{ row.parentName }}</td>
+          <td>{{ row.parentPhone }}</td>
+          <td>{{ row.parentEmail || '—' }}</td>
+          <td>
+            <p-tag *ngIf="row.alreadyExists" value="Exists" severity="info" />
+            <p-tag *ngIf="row.hasMissingEmail && !row.alreadyExists" value="Missing Email" severity="warn">
+              <ng-template pTemplate="content">
+                <i class="pi pi-exclamation-triangle mr-1"></i> Missing Email
+              </ng-template>
+            </p-tag>
+            <p-tag *ngIf="!row.alreadyExists && !row.hasMissingEmail" value="Ready" severity="success" />
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+
+    <div class="step-actions">
+      <p-button
+        label="Next: Password Strategy"
+        icon="pi pi-arrow-right"
+        iconPos="right"
+        (onClick)="proceedToPasswordStep()"
+        [disabled]="selectedCount === 0"
+      />
+    </div>
+  </p-card>
+
+  <!-- Step 3: Password Strategy -->
+  <p-card *ngIf="currentStep === 3">
+    <div class="step-header">
+      <h3>{{ 'PARENTS.BULK.PASSWORD_STRATEGY' | translate }}</h3>
+      <p-button label="Back" icon="pi pi-arrow-left" severity="secondary" size="small" (onClick)="currentStep = 2" />
+    </div>
+
+    <div class="strategy-options">
+      <div class="strategy-row">
+        <p-radioButton name="strategy" value="auto" [(ngModel)]="passwordStrategy" inputId="auto" />
+        <label for="auto">{{ 'PARENTS.BULK.STRATEGY_AUTO' | translate }}</label>
+      </div>
+      <div class="strategy-row">
+        <p-radioButton name="strategy" value="phone" [(ngModel)]="passwordStrategy" inputId="phone" />
+        <label for="phone">{{ 'PARENTS.BULK.STRATEGY_PHONE' | translate }}</label>
+      </div>
+      <div class="strategy-row">
+        <p-radioButton name="strategy" value="dob" [(ngModel)]="passwordStrategy" inputId="dob" />
+        <label for="dob">{{ 'PARENTS.BULK.STRATEGY_DOB' | translate }}</label>
+      </div>
+    </div>
+
+    <p-divider />
+
+    <div class="force-change-row">
+      <p-checkbox [(ngModel)]="forcePasswordChange" [binary]="true" inputId="forceChange" />
+      <label for="forceChange">{{ 'PARENTS.FORCE_CHANGE' | translate }}</label>
+    </div>
+
+    <div class="step-actions">
+      <p-button
+        [label]="'PARENTS.BULK.CREATE_ACCOUNTS' | translate"
+        icon="pi pi-check"
+        (onClick)="createAccounts()"
+      />
+    </div>
+  </p-card>
+
+  <!-- Step 4: Results -->
+  <p-card *ngIf="currentStep === 4 && createResult">
+    <h3>Results</h3>
+    <div class="result-summary">
+      <div class="result-row success">
+        <i class="pi pi-check-circle"></i>
+        <span><strong>{{ createResult.created.length }}</strong> {{ 'PARENTS.BULK.RESULT_CREATED' | translate }}</span>
+      </div>
+      <div class="result-row warn" *ngIf="skippedMissingEmail > 0">
+        <i class="pi pi-exclamation-triangle"></i>
+        <span><strong>{{ skippedMissingEmail }}</strong> {{ 'PARENTS.BULK.RESULT_SKIPPED_EMAIL' | translate }}</span>
+      </div>
+      <div class="result-row info" *ngIf="skippedAlreadyExists > 0">
+        <i class="pi pi-info-circle"></i>
+        <span><strong>{{ skippedAlreadyExists }}</strong> {{ 'PARENTS.BULK.RESULT_SKIPPED_EXISTS' | translate }}</span>
+      </div>
+    </div>
+
+    <div class="step-actions">
+      <p-button
+        icon="pi pi-download"
+        [label]="'PARENTS.DOWNLOAD_CSV' | translate"
+        severity="secondary"
+        (onClick)="downloadCredentialsCsv()"
+        class="mr-2"
+        [disabled]="createResult.created.length === 0"
+      />
+      <p-button
+        icon="pi pi-print"
+        [label]="'PARENTS.DOWNLOAD_PDF' | translate"
+        severity="secondary"
+        (onClick)="downloadCredentialsPdf()"
+        class="mr-2"
+        [disabled]="createResult.created.length === 0"
+      />
+      <p-button
+        icon="pi pi-arrow-left"
+        [label]="'SETUP.BACK_TO_LIST' | translate"
+        (onClick)="goBack()"
+      />
+    </div>
+  </p-card>
+
+</div>

@@ -1,0 +1,83 @@
+@if (showLoader) {
+  <div class="dynamic-form-loader" [class.two-cols]="config.columns === 2">
+    @for (_ of [1,2,3,4,5,6]; track $index) {
+      <div class="loader-field">
+        <p-skeleton height="0.9rem" width="40%" styleClass="mb-2"></p-skeleton>
+        <p-skeleton height="2.5rem" width="100%"></p-skeleton>
+      </div>
+    }
+  </div>
+} @else {
+  <form [formGroup]="form" (ngSubmit)="onSubmit()">
+    <div class="form-grid" [class.two-cols]="config.columns === 2">
+      @for (field of sortedFields; track field.key) {
+        @if (isVisible(field)) {
+          <div class="form-field" [class.col-span-2]="field.colSpan === 2">
+            <label [for]="field.key">
+              {{ field.label | translate }}
+              @if (field.required) { <span class="required-star">*</span> }
+            </label>
+
+            @switch (field.type) {
+              @case ('text') {
+                <input [id]="field.key" pInputText [formControlName]="field.key" [placeholder]="(field.placeholder || '') | translate" [attr.maxlength]="field.maxLength || null" class="w-full" />
+              }
+              @case ('email') {
+                <input [id]="field.key" pInputText type="email" [formControlName]="field.key" [placeholder]="(field.placeholder || '') | translate" class="w-full" />
+              }
+              @case ('number') {
+                <p-inputNumber [inputId]="field.key" [formControlName]="field.key" [min]="field.min ?? 0" [max]="field.max ?? DEFAULT_MAX_NUMBER" styleClass="w-full"></p-inputNumber>
+              }
+              @case ('password') {
+                <p-password [inputId]="field.key" [formControlName]="field.key" [feedback]="false" styleClass="w-full" inputStyleClass="w-full"></p-password>
+              }
+              @case ('textarea') {
+                <textarea [id]="field.key" pInputTextarea [formControlName]="field.key" [rows]="field.rows || 3" [placeholder]="(field.placeholder || '') | translate" class="w-full"></textarea>
+              }
+              @case ('dropdown') {
+                <p-dropdown [inputId]="field.key" [formControlName]="field.key" [options]="field.options || []" [placeholder]="(field.placeholder || 'COMMON.SEARCH') | translate" styleClass="w-full"></p-dropdown>
+              }
+              @case ('multiSelect') {
+                <p-multiSelect [inputId]="field.key" [formControlName]="field.key" [options]="field.options || []" [placeholder]="(field.placeholder || 'COMMON.SEARCH') | translate" styleClass="w-full"></p-multiSelect>
+              }
+              @case ('calendar') {
+                <p-calendar [inputId]="field.key" [formControlName]="field.key" [showIcon]="true" dateFormat="dd/mm/yy" styleClass="w-full"></p-calendar>
+              }
+              @case ('checkbox') {
+                <div class="checkbox-wrapper">
+                  <p-checkbox [inputId]="field.key" [formControlName]="field.key" [binary]="true"></p-checkbox>
+                  <label [for]="field.key" class="checkbox-label">{{ field.label | translate }}</label>
+                </div>
+              }
+              @case ('toggle') {
+                <p-toggleButton [onLabel]="'SETUP.ACTIVE' | translate" [offLabel]="'SETUP.INACTIVE' | translate" [formControlName]="field.key" onIcon="pi pi-check" offIcon="pi pi-times"></p-toggleButton>
+              }
+              @case ('radio') {
+                <div class="radio-group">
+                  @for (opt of field.options || []; track opt.value) {
+                    <div class="radio-item">
+                      <p-radioButton [inputId]="field.key + '_' + opt.value" [formControlName]="field.key" [value]="opt.value"></p-radioButton>
+                      <label [for]="field.key + '_' + opt.value">{{ opt.label }}</label>
+                    </div>
+                  }
+                </div>
+              }
+            }
+
+            @if (field.hint) {
+              <small class="field-hint">{{ field.hint | translate }}</small>
+            }
+            @if (getError(field.key)) {
+              <small class="p-error">{{ getError(field.key)! | translate }}</small>
+            }
+          </div>
+        }
+      }
+    </div>
+
+    <div class="form-actions">
+      <p-button type="button" severity="secondary" [label]="(config.cancelLabel || 'COMMON.CANCEL') | translate" (click)="onCancel()"></p-button>
+      <p-button type="submit" [label]="(config.submitLabel || 'COMMON.SAVE') | translate"></p-button>
+    </div>
+  </form>
+}

@@ -1,0 +1,57 @@
+<div class="theme-page">
+  <h2>Choose primary color</h2>
+  <p class="subtitle">
+    The selected color will be applied to the sidebar, topbar, and primary buttons across the entire portal.
+  </p>
+
+  <div class="color-grid">
+    <div *ngFor="let color of colorOptions"
+         class="color-swatch"
+         [class.selected]="selectedColor().hex === color.hex"
+         [style.background]="lighten(color.hex, 0.88)"
+         (click)="select(color)">
+      <span class="dot" [style.background]="color.hex"></span>
+      <span class="label" [style.color]="color.hex">{{ color.name }}</span>
+    </div>
+  </div>
+
+  <!-- Dark / Light mode toggle
+  <h3>Appearance</h3>
+  <div class="theme-toggle-row">
+    <div class="toggle-label">
+      <span>{{ themeService.isDark() ? 'Dark mode' : 'Light mode' }}</span>
+      <span>{{ themeService.isDark() ? 'Switch to light theme' : 'Switch to dark theme' }}</span>
+    </div>
+    <p-toggleswitch
+      [ngModel]="themeService.isDark()"
+      (ngModelChange)="themeService.toggleTheme()"
+    />
+  </div> -->
+
+  <!-- Preview -->
+  <h3>Preview</h3>
+  <div class="preview-card">
+    <div class="preview-sidebar" [style.background]="selectedColor().hex">
+      <span class="sidebar-logo">SchoolConnect</span>
+      <span class="nav-item active">Dashboard</span>
+      <span class="nav-item">Students</span>
+      <span class="nav-item">Timetable</span>
+    </div>
+    <div class="preview-main">
+      <div class="preview-topbar" [style.background]="selectedColor().hex">
+        <span>Welcome back</span>
+      </div>
+      <button class="preview-btn" [style.background]="selectedColor().hex">
+        + Add Student
+      </button>
+    </div>
+  </div>
+
+  <p-button
+    label="Save branding"
+    [loading]="saving()"
+    (onClick)="save()"
+    [style]="{ width: '100%' }"
+  />
+  <p class="saved-msg" *ngIf="saved()">✓ Theme saved successfully</p>
+</div>

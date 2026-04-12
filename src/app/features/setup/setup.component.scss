@@ -1,0 +1,80 @@
+.setup-page {
+  padding: 1.5rem;
+
+  .setup-header {
+    margin-bottom: 1.5rem;
+
+    .setup-title {
+      font-size: 1.75rem;
+      font-weight: 600;
+      color: var(--primary-color);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+
+      i { font-size: 1.5rem; }
+    }
+  }
+
+  .cards-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+
+    @media (max-width: 768px) {
+      grid-template-columns: 1fr;
+    }
+  }
+}
+
+:host ::ng-deep .setup-card {
+  cursor: pointer;
+  transition: box-shadow 0.2s, transform 0.2s;
+
+  &:hover {
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    transform: translateY(-2px);
+  }
+
+  .p-card-body {
+    padding: 1.5rem;
+  }
+}
+
+.card-content {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+
+  .card-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: var(--primary-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+
+    i {
+      font-size: 1.5rem;
+      color: white;
+    }
+  }
+
+  .card-info {
+    flex: 1;
+
+    h3 {
+      margin: 0 0 0.25rem;
+      font-size: 1.1rem;
+      font-weight: 600;
+    }
+
+    .item-count {
+      margin: 0;
+      color: #666;
+      font-size: 0.875rem;
+    }
+  }
+}

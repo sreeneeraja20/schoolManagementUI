@@ -1,0 +1,80 @@
+.marking-page {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+
+  .page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    h1 {
+      margin: 0;
+      font-size: 1.5rem;
+      font-weight: 600;
+    }
+  }
+
+  .filters-row {
+    display: flex;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+
+    .filter-item {
+      display: flex;
+      flex-direction: column;
+      gap: 0.375rem;
+      min-width: 200px;
+
+      label {
+        font-weight: 500;
+        font-size: 0.9rem;
+      }
+    }
+  }
+
+  .info-banner {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem 1.5rem;
+    background: var(--blue-50, #eff6ff);
+    border: 1px solid var(--blue-200, #bfdbfe);
+    border-radius: 8px;
+    color: var(--blue-700, #1d4ed8);
+    i { font-size: 1.25rem; }
+  }
+
+  .action-bar {
+    display: flex;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+  }
+
+  .status-radios {
+    display: flex;
+    gap: 1.25rem;
+
+    .radio-item {
+      display: flex;
+      align-items: center;
+      gap: 0.375rem;
+    }
+
+    .status-label {
+      cursor: pointer;
+      font-size: 0.9rem;
+      &.present { color: var(--green-600, #16a34a); }
+      &.absent { color: var(--red-600, #dc2626); }
+      &.late { color: var(--orange-600, #ea580c); }
+    }
+  }
+
+  .save-bar {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 1.25rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--surface-border);
+  }
+}

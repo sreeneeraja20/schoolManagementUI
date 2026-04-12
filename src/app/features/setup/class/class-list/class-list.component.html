@@ -1,0 +1,24 @@
+<div class="list-page">
+  <p-toast></p-toast>
+  <p-confirmDialog></p-confirmDialog>
+  <div class="page-header">
+    <div class="header-left">
+      <p-button icon="pi pi-arrow-left" severity="secondary" [rounded]="true" [text]="true" (click)="goBack()"></p-button>
+      <h1>{{ 'SETUP.CLASSES' | translate }}</h1>
+    </div>
+  </div>
+  @if (!hasActiveYear) {
+    <app-setup-banner [message]="'SETUP.DEPENDENCY_ACADEMIC_YEAR' | translate"></app-setup-banner>
+  } @else {
+    <app-data-table
+      [config]="tableConfig"
+      [data]="data"
+      [totalRecords]="data.length"
+      [loading]="loading"
+      (addClick)="onAdd()"
+      (editClick)="onEdit($event)"
+      (deleteClick)="onDelete($event)"
+      (filterChange)="onFilter($event)">
+    </app-data-table>
+  }
+</div>

@@ -1,0 +1,101 @@
+<div class="crud-page">
+  <p-toast></p-toast>
+  <p-confirmDialog></p-confirmDialog>
+
+  <div class="page-header">
+    <div class="header-left">
+      <p-button icon="pi pi-arrow-left" severity="secondary" [rounded]="true" [text]="true" (click)="goBack()"></p-button>
+      <h1>{{ 'SETUP.ACADEMIC_YEARS' | translate }}</h1>
+    </div>
+    <p-button icon="pi pi-plus" [label]="'SETUP.ADD' | translate" (click)="openAddDialog()"></p-button>
+  </div>
+
+  <div class="table-container">
+    <p-table
+      [value]="academicYears()"
+      [loading]="loading"
+      [sortMode]="'multiple'"
+      [paginator]="true"
+      [rows]="10"
+      [globalFilterFields]="['name']"
+      #dt>
+      <ng-template pTemplate="caption">
+        <div class="table-caption">
+          <span class="p-input-icon-left">
+            <i class="pi pi-search"></i>
+            <input pInputText type="text" (input)="dt.filterGlobal($any($event.target).value, 'contains')" [placeholder]="'SETUP.SEARCH' | translate" />
+          </span>
+        </div>
+      </ng-template>
+      <ng-template pTemplate="header">
+        <tr>
+          <th pSortableColumn="name">{{ 'SETUP.NAME' | translate }} <p-sortIcon field="name"></p-sortIcon></th>
+          <th pSortableColumn="startDate">{{ 'SETUP.START_DATE' | translate }} <p-sortIcon field="startDate"></p-sortIcon></th>
+          <th pSortableColumn="endDate">{{ 'SETUP.END_DATE' | translate }} <p-sortIcon field="endDate"></p-sortIcon></th>
+          <th>{{ 'SETUP.STATUS' | translate }}</th>
+          <th>{{ 'SETUP.ACTIONS' | translate }}</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-item>
+        <tr>
+          <td>{{ item.name }}</td>
+          <td>{{ item.startDate | date:'mediumDate' }}</td>
+          <td>{{ item.endDate | date:'mediumDate' }}</td>
+          <td>
+            <p-tag [value]="item.isActive ? ('SETUP.ACTIVE' | translate) : ('SETUP.INACTIVE' | translate)"
+                   [severity]="item.isActive ? 'success' : 'secondary'"></p-tag>
+          </td>
+          <td>
+            <p-button icon="pi pi-pencil" severity="info" [rounded]="true" [text]="true" (click)="openEditDialog(item)" [pTooltip]="'SETUP.EDIT' | translate"></p-button>
+            <p-button icon="pi pi-trash" severity="danger" [rounded]="true" [text]="true" (click)="confirmDelete(item)" [pTooltip]="'SETUP.DELETE' | translate"></p-button>
+          </td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr><td colspan="5" class="text-center">{{ 'SETUP.NO_DATA' | translate }}</td></tr>
+      </ng-template>
+    </p-table>
+  </div>
+
+  <p-dialog
+    [(visible)]="dialogVisible"
+    [header]="(isEditMode() ? 'SETUP.EDIT' : 'SETUP.ADD') | translate"
+    [modal]="true"
+    [style]="{ width: '480px' }"
+    [closable]="true">
+    <form [formGroup]="form">
+      <div class="form-field">
+        <label>{{ 'SETUP.NAME' | translate }} *</label>
+        <input pInputText formControlName="name" class="w-full" />
+        @if (form.get('name')?.touched && form.get('name')?.hasError('required')) {
+          <small class="p-error">{{ 'SETUP.VALIDATION_NAME_REQUIRED' | translate }}</small>
+        }
+      </div>
+      <div class="form-field">
+        <label>{{ 'SETUP.START_DATE' | translate }} *</label>
+        <p-calendar formControlName="startDate" [showIcon]="true" dateFormat="dd/mm/yy" styleClass="w-full"></p-calendar>
+        @if (form.get('startDate')?.touched && form.get('startDate')?.hasError('required')) {
+          <small class="p-error">{{ 'SETUP.START_DATE' | translate }} {{ 'SETUP.VALIDATION_REQUIRED' | translate }}</small>
+        }
+      </div>
+      <div class="form-field">
+        <label>{{ 'SETUP.END_DATE' | translate }} *</label>
+        <p-calendar formControlName="endDate" [showIcon]="true" dateFormat="dd/mm/yy" styleClass="w-full"></p-calendar>
+        @if (form.get('endDate')?.touched && form.get('endDate')?.hasError('required')) {
+          <small class="p-error">{{ 'SETUP.END_DATE' | translate }} {{ 'SETUP.VALIDATION_REQUIRED' | translate }}</small>
+        }
+        @if (form.touched && form.hasError('dateRange')) {
+          <small class="p-error">{{ 'SETUP.VALIDATION_DATE_RANGE' | translate }}</small>
+        }
+      </div>
+      <div class="form-field form-checkbox">
+        <p-checkbox formControlName="isActive" [binary]="true" inputId="isActive"></p-checkbox>
+        <label for="isActive" style="margin-left: 0.5rem;">{{ 'SETUP.ACTIVE' | translate }}</label>
+      </div>
+    </form>
+    <ng-template pTemplate="footer">
+      <p-button [label]="'SETUP.CANCEL' | translate" severity="secondary" (click)="dialogVisible = false"></p-button>
+      <p-button [label]="'SETUP.SAVE' | translate" (click)="save()"></p-button>
+    </ng-template>
+  </p-dialog>
+</div>

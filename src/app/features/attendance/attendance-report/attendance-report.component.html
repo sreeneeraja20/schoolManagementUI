@@ -1,0 +1,87 @@
+<div class="report-page">
+  <div class="page-header">
+    <h1>{{ 'ATTENDANCE.REPORT' | translate }}</h1>
+    <div class="header-actions">
+      <p-button
+        icon="pi pi-file-excel"
+        [label]="'EXPORT.CSV' | translate"
+        severity="secondary"
+        [disabled]="data.length === 0"
+        (click)="onExportCsv()">
+      </p-button>
+      <p-button
+        icon="pi pi-print"
+        [label]="'EXPORT.PRINT' | translate"
+        severity="secondary"
+        [disabled]="data.length === 0"
+        (click)="onPrint()">
+      </p-button>
+      <p-button
+        icon="pi pi-check-circle"
+        [label]="'ATTENDANCE.MARK' | translate"
+        severity="secondary"
+        (click)="goToMarking()">
+      </p-button>
+    </div>
+  </div>
+
+  <p-card>
+    <div class="filters-row">
+      <div class="filter-item">
+        <label>{{ 'ATTENDANCE.DATE' | translate }} (From)</label>
+        <p-calendar [(ngModel)]="fromDate" [showIcon]="true" dateFormat="dd/mm/yy" (onSelect)="applyFilters()"></p-calendar>
+      </div>
+      <div class="filter-item">
+        <label>{{ 'ATTENDANCE.DATE' | translate }} (To)</label>
+        <p-calendar [(ngModel)]="toDate" [showIcon]="true" dateFormat="dd/mm/yy" (onSelect)="applyFilters()"></p-calendar>
+      </div>
+      <div class="filter-item">
+        <label>{{ 'ATTENDANCE.CLASS' | translate }}</label>
+        <p-dropdown
+          [options]="classOptions"
+          [ngModel]="selectedClassId"
+          (ngModelChange)="onClassChange($event)"
+          [placeholder]="'ATTENDANCE.CLASS' | translate"
+          [showClear]="true">
+        </p-dropdown>
+      </div>
+      <div class="filter-item">
+        <label>{{ 'ATTENDANCE.SECTION' | translate }}</label>
+        <p-dropdown
+          [options]="sectionOptions"
+          [ngModel]="selectedSectionId"
+          (ngModelChange)="onSectionChange($event)"
+          [placeholder]="'ATTENDANCE.SECTION' | translate"
+          [showClear]="true"
+          [disabled]="!selectedClassId">
+        </p-dropdown>
+      </div>
+    </div>
+  </p-card>
+
+  <div class="stats-row">
+    <div class="stat-card present">
+      <span class="stat-value">{{ totalPresent }}</span>
+      <span class="stat-label">{{ 'ATTENDANCE.TOTAL_PRESENT' | translate }}</span>
+    </div>
+    <div class="stat-card absent">
+      <span class="stat-value">{{ totalAbsent }}</span>
+      <span class="stat-label">{{ 'ATTENDANCE.TOTAL_ABSENT' | translate }}</span>
+    </div>
+    <div class="stat-card late">
+      <span class="stat-value">{{ totalLate }}</span>
+      <span class="stat-label">{{ 'ATTENDANCE.TOTAL_LATE' | translate }}</span>
+    </div>
+    <div class="stat-card percent">
+      <span class="stat-value">{{ attendancePercent }}%</span>
+      <span class="stat-label">{{ 'ATTENDANCE.ATTENDANCE_PERCENTAGE' | translate }}</span>
+    </div>
+  </div>
+
+  <app-data-table
+    [config]="tableConfig"
+    [data]="data"
+    [totalRecords]="data.length"
+    (filterChange)="onFilter($event)">
+  </app-data-table>
+</div>

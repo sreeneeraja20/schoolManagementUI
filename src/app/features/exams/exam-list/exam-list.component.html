@@ -1,0 +1,27 @@
+<div class="page-container">
+  <div class="page-header">
+    <h1>{{ 'EXAMS.TITLE' | translate }}</h1>
+    <div class="header-actions">
+      <p-button
+        icon="pi pi-id-card"
+        [label]="'EXAMS.REPORT_CARDS' | translate"
+        severity="secondary"
+        (click)="goToReportCards()">
+      </p-button>
+    </div>
+  </div>
+
+  <app-data-table
+    [config]="tableConfig"
+    [data]="data"
+    [loading]="loading"
+     (addClick)="onAdd()"
+    (editClick)="onEdit($event)"
+    (viewClick)="onView($event)"
+    (deleteClick)="onDelete($event)"
+    (filterChange)="onFilter($event)">
+</app-data-table>
+
+  <p-confirmDialog></p-confirmDialog>
+  <p-toast></p-toast>
+</div>

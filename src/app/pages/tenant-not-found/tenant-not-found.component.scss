@@ -1,0 +1,22 @@
+.error-wrapper {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface-ground);
+}
+
+.error-content {
+  text-align: center;
+  padding: 2rem;
+}
+
+.error-icon {
+  font-size: 4rem;
+  color: #f59e0b;
+  margin-bottom: 1rem;
+}
+
+h1 {
+  margin-bottom: 1rem;
+}

@@ -1,0 +1,99 @@
+<div class="view-page">
+  <div class="page-header">
+    <div class="header-left">
+      <p-button icon="pi pi-arrow-left" severity="secondary" [rounded]="true" [text]="true" (click)="goBack()"></p-button>
+      <nav class="breadcrumb">
+        <span class="breadcrumb-link" (click)="goBack()">{{ 'STAFF.TITLE' | translate }}</span>
+        <span class="breadcrumb-sep"> &gt; </span>
+        <span>{{ 'STAFF.VIEW' | translate }}</span>
+      </nav>
+    </div>
+    <div class="header-actions">
+      <p-button label="{{ 'COMMON.EDIT' | translate }}" icon="pi pi-pencil" (click)="onEdit()"></p-button>
+      <p-button label="{{ 'SETUP.BACK_TO_LIST' | translate }}" icon="pi pi-list" severity="secondary" (click)="goBack()"></p-button>
+    </div>
+  </div>
+
+  @if (staff) {
+    <p-card>
+      <div class="profile-section">
+        <div class="profile-photo">
+          @if (staff.photoUrl) {
+            <app-image-upload
+              [imageUrl]="staff.photoUrl"
+              [readonly]="true"
+              [width]="'120px'"
+              [height]="'120px'">
+            </app-image-upload>
+          } @else {
+            <div class="initials-circle">{{ initials }}</div>
+          }
+        </div>
+        <div class="profile-info">
+          <h2 class="staff-name">{{ staff.name }}</h2>
+          <p-tag [value]="staff.role" [severity]="getRoleSeverity(staff.role)"></p-tag>
+        </div>
+      </div>
+
+      <p-divider></p-divider>
+
+      <h3 class="section-title">{{ 'STAFF.PROFILE' | translate }}</h3>
+      <div class="detail-grid">
+        <div class="detail-item">
+          <span class="detail-label">{{ 'STAFF.EMAIL' | translate }}</span>
+          <span class="detail-value">{{ staff.email }}</span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label">{{ 'STAFF.PHONE' | translate }}</span>
+          <span class="detail-value">{{ staff.phone }}</span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label">{{ 'STAFF.QUALIFICATION' | translate }}</span>
+          <span class="detail-value">{{ staff.qualification }}</span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label">{{ 'STAFF.JOINING_DATE' | translate }}</span>
+          <span class="detail-value">{{ staff.joiningDate | date:'mediumDate' }}</span>
+        </div>
+        <div class="detail-item detail-item--full">
+          <span class="detail-label">{{ 'STAFF.SUBJECTS' | translate }}</span>
+          <span class="detail-value">{{ subjectNames || '-' }}</span>
+        </div>
+      </div>
+
+      @if (timetableSlots.length > 0) {
+        <p-divider></p-divider>
+        <h3 class="section-title">{{ 'STAFF.TIMETABLE_SUMMARY' | translate }}</h3>
+        <div class="timetable-info">
+          <p>{{ timetableSlots.length }} {{ 'TIMETABLE.PERIOD' | translate }}</p>
+        </div>
+      }
+
+      <p-divider></p-divider>
+
+      <h3 class="section-title">{{ 'AUDIT.AUDIT_INFO' | translate }}</h3>
+      <div class="detail-grid">
+        <div class="detail-item">
+          <span class="detail-label">{{ 'AUDIT.CREATED_BY' | translate }}</span>
+          <span class="detail-value">{{ staff.createdBy || '-' }}</span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label">{{ 'AUDIT.CREATED_DATE' | translate }}</span>
+          <span class="detail-value">{{ (staff.createdDate | date:'medium') || '-' }}</span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label">{{ 'AUDIT.UPDATED_BY' | translate }}</span>
+          <span class="detail-value">{{ staff.updatedBy || '-' }}</span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label">{{ 'AUDIT.UPDATED_DATE' | translate }}</span>
+          <span class="detail-value">{{ (staff.updatedDate | date:'medium') || '-' }}</span>
+        </div>
+      </div>
+    </p-card>
+  } @else {
+    <p-card>
+      <p>{{ 'TABLE.NO_RECORDS' | translate }}</p>
+    </p-card>
+  }
+</div>

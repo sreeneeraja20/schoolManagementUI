@@ -1,0 +1,97 @@
+<p-dialog
+  [header]="dialogTitle"
+  [visible]="visible"
+  [modal]="true"
+  [style]="{ width: '700px', maxWidth: '95vw' }"
+  [closable]="true"
+  [draggable]="false"
+  (onHide)="onDialogHide()">
+
+  <div class="import-body">
+    <div class="upload-row">
+      <button class="template-btn" type="button" (click)="downloadTemplate()">
+        <i class="pi pi-download"></i>
+        {{ 'IMPORT.DOWNLOAD_TEMPLATE' | translate }}
+      </button>
+      <label class="file-pick-btn" for="csv-file-input">
+        <i class="pi pi-upload"></i>
+        {{ 'IMPORT.UPLOAD' | translate }}
+      </label>
+      <input id="csv-file-input" type="file" accept=".csv" (change)="onFileSelected($event)" class="hidden-input">
+      @if (fileName) {
+        <span class="file-name">
+          <i class="pi pi-file"></i> {{ fileName }}
+        </span>
+      }
+    </div>
+
+    @if (isParsed) {
+      @if (errors.length > 0) {
+        <div class="errors-panel">
+          <div class="errors-title">
+            <i class="pi pi-exclamation-triangle"></i>
+            {{ errors.length }} {{ 'IMPORT.ERRORS_FOUND' | translate }}
+          </div>
+          <ul class="error-list">
+            @for (err of errors; track err) {
+              <li>{{ err }}</li>
+            }
+          </ul>
+        </div>
+      }
+
+      @if (allRows.length > 0) {
+        <div class="preview-section">
+          <div class="preview-header">
+            <span class="preview-title">{{ 'IMPORT.PREVIEW' | translate }}</span>
+            <span class="rows-badge">
+              {{ 'IMPORT.ROWS_VALID' | translate: { count: allRows.length } }}
+            </span>
+          </div>
+          <div class="preview-table-wrap">
+            <table class="preview-table">
+              <thead>
+                <tr>
+                  @for (col of config.columns; track col.field) {
+                    <th>{{ col.label }}</th>
+                  }
+                </tr>
+              </thead>
+              <tbody>
+                @for (row of previewRows; track $index) {
+                  <tr>
+                    @for (col of config.columns; track col.field) {
+                      <td>{{ row[col.field] }}</td>
+                    }
+                  </tr>
+                }
+              </tbody>
+            </table>
+            @if (allRows.length > 5) {
+              <p class="more-rows">
+                {{ 'IMPORT.MORE_ROWS' | translate: { count: allRows.length - 5 } }}
+              </p>
+            }
+          </div>
+        </div>
+      }
+
+      @if (allRows.length === 0 && errors.length === 0) {
+        <p class="no-data">{{ 'IMPORT.ERROR_EMPTY' | translate }}</p>
+      }
+    }
+  </div>
+
+  <ng-template pTemplate="footer">
+    <p-button
+      [label]="'IMPORT.CANCEL' | translate"
+      severity="secondary"
+      (click)="close()">
+    </p-button>
+    <p-button
+      [label]="'IMPORT.IMPORT' | translate"
+      [disabled]="!isParsed || allRows.length === 0"
+      (click)="doImport()">
+    </p-button>
+  </ng-template>
+</p-dialog>

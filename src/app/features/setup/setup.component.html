@@ -1,0 +1,35 @@
+<div class="setup-page">
+  <div class="setup-header">
+    <h1 class="setup-title"><i class="pi pi-cog"></i> {{ 'SETUP.TITLE' | translate }}</h1>
+  </div>
+
+  @if (!hasActiveYear()) {
+    <app-setup-banner [message]="'SETUP.DEPENDENCY_ACADEMIC_YEAR' | translate"></app-setup-banner>
+  }
+
+  <div class="cards-grid">
+    @for (card of cards; track card.key) {
+      <p-card styleClass="setup-card" (click)="navigate(card.key)">
+        <div class="card-content">
+          <div class="card-icon">
+            <i class="pi {{ card.icon }}"></i>
+          </div>
+          <div class="card-info">
+            <h3>{{ card.labelKey | translate }}</h3>
+            <p class="item-count">{{ card.countFn() }} {{ 'SETUP.ITEMS' | translate }}</p>
+          </div>
+          <div class="card-action">
+            <p-button
+              [label]="'SETUP.MANAGE' | translate"
+              icon="pi pi-arrow-right"
+              iconPos="right"
+              size="small"
+              (click)="navigate(card.key); $event.stopPropagation()">
+            </p-button>
+          </div>
+        </div>
+      </p-card>
+    }
+  </div>
+</div>
+

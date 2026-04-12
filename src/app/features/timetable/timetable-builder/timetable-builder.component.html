@@ -1,0 +1,107 @@
+<div class="builder-page">
+  <p-toast></p-toast>
+  <div class="page-header">
+    <h1>{{ 'TIMETABLE.BUILDER' | translate }}</h1>
+    <div class="header-actions">
+      <p-button icon="pi pi-eye" [label]="'TIMETABLE.VIEW' | translate" severity="secondary" (click)="goToView()"></p-button>
+      @if (selectedClassId && selectedSectionId) {
+        <p-button icon="pi pi-save" [label]="'TIMETABLE.SAVE' | translate" (click)="saveAll()"></p-button>
+      }
+    </div>
+  </div>
+
+  <p-card>
+    <div class="filters-row">
+      <div class="filter-item">
+        <label>{{ 'TIMETABLE.CLASS' | translate }}</label>
+        <p-dropdown
+          [options]="classOptions"
+          [ngModel]="selectedClassId"
+          (ngModelChange)="onClassChange($event)"
+          [placeholder]="'TIMETABLE.CLASS' | translate"
+          [showClear]="true">
+        </p-dropdown>
+      </div>
+      <div class="filter-item">
+        <label>{{ 'TIMETABLE.SECTION' | translate }}</label>
+        <p-dropdown
+          [options]="sectionOptions"
+          [ngModel]="selectedSectionId"
+          (ngModelChange)="onSectionChange($event)"
+          [placeholder]="'TIMETABLE.SECTION' | translate"
+          [showClear]="true"
+          [disabled]="!selectedClassId">
+        </p-dropdown>
+      </div>
+    </div>
+  </p-card>
+
+  @if (!selectedClassId || !selectedSectionId) {
+    <div class="info-banner">
+      <i class="pi pi-info-circle"></i>
+      <span>{{ 'TIMETABLE.SELECT_CLASS_SECTION' | translate }}</span>
+    </div>
+  } @else {
+    <p-card>
+      <div class="timetable-wrapper">
+        <table class="timetable-grid">
+          <thead>
+            <tr>
+              <th class="period-col">{{ 'TIMETABLE.PERIOD' | translate }}</th>
+              @for (day of days; track day) {
+                <th>{{ getDayKey(day) | translate }}</th>
+              }
+            </tr>
+          </thead>
+          <tbody>
+            @for (period of periods; track period) {
+              <tr>
+                <td class="period-cell">{{ 'TIMETABLE.PERIOD' | translate }} {{ period }}</td>
+                @for (day of days; track day) {
+                  <td class="slot-cell"
+                      [class.has-subject]="grid[period]?.[day]?.subjectId"
+                      [class.editing]="editingCell?.period === period && editingCell?.day === day">
+
+                    @if (editingCell?.period === period && editingCell?.day === day) {
+                      <!-- Inline Edit Form -->
+                      <div class="edit-form">
+                        <p-dropdown
+                          [options]="subjectOptions"
+                          [(ngModel)]="editingCell!.subjectId"
+                          [placeholder]="'TIMETABLE.SUBJECT' | translate"
+                          [showClear]="true"
+                          styleClass="w-full edit-dropdown">
+                        </p-dropdown>
+                        <p-dropdown
+                          [options]="staffOptions"
+                          [(ngModel)]="editingCell!.staffId"
+                          [placeholder]="'TIMETABLE.TEACHER' | translate"
+                          [showClear]="true"
+                          styleClass="w-full edit-dropdown">
+                        </p-dropdown>
+                        <div class="edit-actions">
+                          <p-button icon="pi pi-check" severity="success" size="small" [text]="true" (click)="applyEdit()"></p-button>
+                          <p-button icon="pi pi-times" severity="secondary" size="small" [text]="true" (click)="cancelEdit()"></p-button>
+                        </div>
+                      </div>
+                    } @else if (grid[period]?.[day]?.subjectId) {
+                      <div class="slot-content" (click)="startEdit(grid[period][day])">
+                        <span class="subject-name">{{ grid[period][day].subjectName }}</span>
+                        <span class="staff-name">{{ grid[period][day].staffName }}</span>
+                        <i class="pi pi-pencil edit-icon"></i>
+                      </div>
+                    } @else {
+                      <div class="empty-cell" (click)="startEdit(grid[period][day])">
+                        <i class="pi pi-plus"></i>
+                      </div>
+                    }
+                  </td>
+                }
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </p-card>
+  }
+</div>
