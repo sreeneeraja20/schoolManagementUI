@@ -9,6 +9,7 @@ import { MessageService, ConfirmationService } from 'primeng/api';
 import Aura from '@primeng/themes/aura';
 import { routes } from './app.routes';
 import { tenantInterceptor } from './core/interceptors/tenant.interceptor';
+import { authInterceptor } from './core/interceptors/auth.interceptor';
 
 export function HttpLoaderFactory(http: HttpClient) {
   return new TranslateHttpLoader(http, '/assets/i18n/', '.json');
@@ -18,7 +19,7 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes),
-    provideHttpClient(withInterceptors([tenantInterceptor])),
+    provideHttpClient(withInterceptors([tenantInterceptor, authInterceptor])),
     provideAnimationsAsync(),
     providePrimeNG({
       theme: {
