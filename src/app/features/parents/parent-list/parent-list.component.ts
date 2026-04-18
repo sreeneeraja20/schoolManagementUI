@@ -82,25 +82,32 @@ export class ParentListComponent implements OnInit {
 
   loadData(request: TableLazyLoadEvent): void {
     this.loading = true;
-    const queryRequest: TableLazyLoadEvent = {
-      ...request,
-      columnFilters: {
-        ...request.columnFilters,
-        tenantId: this.tenantService.getTenantId()
-      }
-    };
-    const result = this.storage.getPage<ParentAccount>('parent_accounts', queryRequest, {
-      globalSearchFields: ['name', 'email', 'phone', 'relation'],
-      customFilters: {
-        tenantId: (row, value) => row.tenantId === value
-      }
-    });
     const students = this.storage.get<Student>('students');
-    this.data = result.data.map(p => {
-      const childNames = p.studentIds
-        .map(sid => students.find(s => s.id === sid)?.name ?? '')
+    const studentNameById = new Map(students.map(s => [s.id, s.name]));
+    const getChildrenNames = (studentIds: string[]): string =>
+      studentIds
+        .map(sid => studentNameById.get(sid) ?? '')
         .filter(n => n)
         .join(', ');
+
+    const result = this.storage.getPage<ParentAccount>('parent_accounts', request, {
+      globalSearchPredicate: (row, searchText) => {
+        const childrenNames = getChildrenNames(row.studentIds).toLowerCase();
+        return (
+          row.name.toLowerCase().includes(searchText) ||
+          row.email.toLowerCase().includes(searchText) ||
+          row.phone.toLowerCase().includes(searchText) ||
+          row.relation.toLowerCase().includes(searchText) ||
+          childrenNames.includes(searchText)
+        );
+      },
+      customFilters: {
+        tenantId: (row, value) => row.tenantId === value
+      },
+      fixedFilters: { tenantId: this.tenantService.getTenantId() }
+    });
+    this.data = result.data.map(p => {
+      const childNames = getChildrenNames(p.studentIds);
 
       let loginStatus: string;
       if (!p.isActive) {

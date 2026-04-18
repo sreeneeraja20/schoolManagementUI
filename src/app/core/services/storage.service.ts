@@ -5,6 +5,8 @@ import { ServerSideResult, TableLazyLoadEvent } from '../../shared/components/da
 export interface StoragePageOptions<T> {
   globalSearchFields?: string[];
   customFilters?: Record<string, (row: T, value: any) => boolean>;
+  globalSearchPredicate?: (row: T, searchText: string) => boolean;
+  fixedFilters?: Record<string, any>;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -37,15 +39,20 @@ export class StorageService {
 
     let filtered = [...rows];
     const globalSearch = (params.globalSearch ?? '').trim().toLowerCase();
-    if (globalSearch && (options.globalSearchFields?.length ?? 0) > 0) {
-      filtered = filtered.filter(row =>
-        (options.globalSearchFields ?? []).some(field =>
-          String(row[field] ?? '').toLowerCase().includes(globalSearch)
-        )
-      );
+    if (globalSearch) {
+      if (options.globalSearchPredicate) {
+        filtered = filtered.filter(row => options.globalSearchPredicate?.(row, globalSearch) ?? false);
+      } else if ((options.globalSearchFields?.length ?? 0) > 0) {
+        filtered = filtered.filter(row =>
+          (options.globalSearchFields ?? []).some(field =>
+            String(row[field] ?? '').toLowerCase().includes(globalSearch)
+          )
+        );
+      }
     }
 
-    Object.entries(params.columnFilters ?? {}).forEach(([field, value]) => {
+    const allFilters = { ...(options.fixedFilters ?? {}), ...(params.columnFilters ?? {}) };
+    Object.entries(allFilters).forEach(([field, value]) => {
       if (value === undefined || value === null || value === '') return;
       const customFilter = options.customFilters?.[field];
       filtered = filtered.filter(row => {

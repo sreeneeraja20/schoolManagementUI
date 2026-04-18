@@ -104,7 +104,10 @@ export class SectionComponent implements OnInit {
       }
     };
     const result = this.storage.getPage<Section>('sections', request, {
-      globalSearchFields: ['name'],
+      globalSearchPredicate: (row, searchText) => {
+        const className = this.getClassName(row.classId).toLowerCase();
+        return row.name.toLowerCase().includes(searchText) || className.includes(searchText);
+      },
       customFilters: {
         classId: (row, value) => row.classId === value
       }

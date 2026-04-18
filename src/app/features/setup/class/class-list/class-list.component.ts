@@ -69,12 +69,18 @@ export class ClassListComponent implements OnInit {
     const years = this.storage.get<AcademicYear>('academic_years');
     const active = years.find(y => y.isActive);
     this.hasActiveYear = !!active;
+    if (!active) {
+      this.sections = this.storage.get<Section>('sections');
+      this.data = [];
+      this.totalRecords = 0;
+      return;
+    }
     this.sections = this.storage.get<Section>('sections');
     const queryRequest: TableLazyLoadEvent = {
       ...request,
       columnFilters: {
         ...request.columnFilters,
-        academicYearId: active?.id ?? '__no_active_year__'
+        academicYearId: active.id
       }
     };
     const result = this.storage.getPage<Class>('classes', queryRequest, {

@@ -77,11 +77,16 @@ export class ClassComponent implements OnInit {
 
   private applyTableQuery(): void {
     const activeYearId = this.activeYear()?.id;
+    if (!activeYearId) {
+      this.displayedClasses.set([]);
+      this.totalRecords = 0;
+      return;
+    }
     const request: TableLazyLoadEvent = {
       ...this.tableState,
       columnFilters: {
         ...this.tableState.columnFilters,
-        academicYearId: activeYearId ?? '__no_active_year__'
+        academicYearId: activeYearId
       }
     };
     const result = this.storage.getPage<Class>('classes', request, {

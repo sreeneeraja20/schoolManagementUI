@@ -85,25 +85,27 @@ export class UserListComponent implements OnInit {
 
   loadData(request: TableLazyLoadEvent): void {
     this.loading = true;
-    const queryRequest: TableLazyLoadEvent = {
-      ...request,
-      columnFilters: {
-        ...request.columnFilters,
-        tenantId: this.tenantService.getTenantId()
-      }
-    };
-    const result = this.storage.getPage<User>('users', queryRequest, {
-      globalSearchFields: ['name', 'email', 'role'],
+    const staff = this.storage.get<Staff>('staff');
+    const staffNameById = new Map(staff.map(s => [s.id, s.name]));
+    const notLinkedLabel = this.translate.instant('USERS.NOT_LINKED');
+    const result = this.storage.getPage<User>('users', request, {
+      globalSearchPredicate: (row, searchText) => {
+        const staffName = (staffNameById.get(row.staffId) ?? notLinkedLabel).toLowerCase();
+        return (
+          row.name.toLowerCase().includes(searchText) ||
+          row.email.toLowerCase().includes(searchText) ||
+          row.role.toLowerCase().includes(searchText) ||
+          staffName.includes(searchText)
+        );
+      },
       customFilters: {
         tenantId: (row, value) => row.tenantId === value
-      }
+      },
+      fixedFilters: { tenantId: this.tenantService.getTenantId() }
     });
-    const staff = this.storage.get<Staff>('staff');
     this.data = result.data.map(u => ({
       ...u,
-      isActive: u.isActive,
-      isFirstLogin: u.isFirstLogin,
-      staffName: staff.find(s => s.id === u.staffId)?.name ?? this.translate.instant('USERS.NOT_LINKED')
+      staffName: staffNameById.get(u.staffId) ?? notLinkedLabel
     }));
     this.totalRecords = result.totalRecords;
     this.loading = false;
