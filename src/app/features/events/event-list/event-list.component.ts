@@ -10,8 +10,9 @@ import { StorageService } from '../../../core/services/storage.service';
 import { TenantService } from '../../../core/services/tenant.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { DataTableComponent } from '../../../shared/components/data-table/data-table.component';
-import { TableConfig, TableFilterEvent } from '../../../shared/components/data-table/data-table.models';
+import { TableConfig, TableLazyLoadEvent } from '../../../shared/components/data-table/data-table.models';
 import { SchoolEvent } from '../../../core/models/event.model';
+import { ServerTableService } from '../../../core/services/server-table.service';
 
 @Component({
   selector: 'app-event-list',
@@ -29,11 +30,13 @@ export class EventListComponent implements OnInit {
   private messageService = inject(MessageService);
   private confirmationService = inject(ConfirmationService);
   private translate = inject(TranslateService);
+  private serverTable = inject(ServerTableService);
 
-  allData: SchoolEvent[] = [];
   data: SchoolEvent[] = [];
+  totalRecords = 0;
   loading = false;
   isAdmin = false;
+  tableState: TableLazyLoadEvent = { page: 0, rows: 10, first: 0, columnFilters: {} };
 
   tableConfig!: TableConfig;
 
@@ -76,27 +79,24 @@ export class EventListComponent implements OnInit {
       emptyMessage: 'TABLE.NO_RECORDS'
     };
 
-    this.loadData();
+    this.loadData(this.tableState);
   }
 
-  loadData(): void {
-    this.allData = this.storage.get<SchoolEvent>('events');
-    this.data = [...this.allData];
+  loadData(request: TableLazyLoadEvent): void {
+    const rows = this.storage.get<SchoolEvent>('events');
+    const result = this.serverTable.query(rows, request, {
+      globalSearchFields: ['title', 'description'],
+      customFilters: {
+        type: (row, value) => row.type === value
+      }
+    });
+    this.data = result.data;
+    this.totalRecords = result.totalRecords;
   }
 
-  onFilter(event: TableFilterEvent): void {
-    let result = [...this.allData];
-    if (event.globalSearch) {
-      const q = event.globalSearch.toLowerCase();
-      result = result.filter(r =>
-        r.title.toLowerCase().includes(q) ||
-        r.description?.toLowerCase().includes(q)
-      );
-    }
-    const cf = event.columnFilters;
-    if (cf['title']) result = result.filter(r => r.title.toLowerCase().includes(cf['title'].toLowerCase()));
-    if (cf['type']) result = result.filter(r => r.type === cf['type']);
-    this.data = result;
+  onLazyLoad(event: TableLazyLoadEvent): void {
+    this.tableState = event;
+    this.loadData(event);
   }
 
   onAdd(): void {
@@ -114,7 +114,7 @@ export class EventListComponent implements OnInit {
       message: this.translate.instant('EVENTS.CONFIRM_DELETE'),
       accept: () => {
         this.storage.delete('events', row.id);
-        this.loadData();
+        this.loadData(this.tableState);
         this.messageService.add({ severity: 'success', summary: this.translate.instant('SETUP.SUCCESS'), detail: this.translate.instant('EVENTS.DELETED'), life: 3000 });
       }
     });

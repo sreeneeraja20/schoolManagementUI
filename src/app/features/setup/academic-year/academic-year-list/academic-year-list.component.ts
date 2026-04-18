@@ -11,7 +11,8 @@ import { TenantService } from '../../../../core/services/tenant.service';
 import { SeedDataService } from '../../../../core/services/seed-data.service';
 import { AcademicYear } from '../../../../core/models/academic-year.model';
 import { DataTableComponent } from '../../../../shared/components/data-table/data-table.component';
-import { TableConfig, TableFilterEvent } from '../../../../shared/components/data-table/data-table.models';
+import { TableConfig, TableLazyLoadEvent } from '../../../../shared/components/data-table/data-table.models';
+import { ServerTableService } from '../../../../core/services/server-table.service';
 
 @Component({
   selector: 'app-academic-year-list',
@@ -29,10 +30,12 @@ export class AcademicYearListComponent implements OnInit {
   private messageService = inject(MessageService);
   private confirmationService = inject(ConfirmationService);
   private translate = inject(TranslateService);
+  private serverTable = inject(ServerTableService);
 
-  allData: AcademicYear[] = [];
   data: AcademicYear[] = [];
+  totalRecords = 0;
   loading = false;
+  tableState: TableLazyLoadEvent = { page: 0, rows: 10, first: 0, columnFilters: {} };
 
   tableConfig: TableConfig = {
     columns: [
@@ -64,28 +67,24 @@ export class AcademicYearListComponent implements OnInit {
 
   ngOnInit(): void {
     this.seedService.seed();
-    this.loadData();
+    this.loadData(this.tableState);
   }
 
-  loadData(): void {
-    this.allData = this.storage.get<AcademicYear>('academic_years');
-    this.data = [...this.allData];
+  loadData(request: TableLazyLoadEvent): void {
+    const rows = this.storage.get<AcademicYear>('academic_years');
+    const result = this.serverTable.query(rows, request, {
+      globalSearchFields: ['name'],
+      customFilters: {
+        isActive: (row, value) => row.isActive === value
+      }
+    });
+    this.data = result.data;
+    this.totalRecords = result.totalRecords;
   }
 
-  onFilter(event: TableFilterEvent): void {
-    let result = [...this.allData];
-    if (event.globalSearch) {
-      const q = event.globalSearch.toLowerCase();
-      result = result.filter(r => r.name.toLowerCase().includes(q));
-    }
-    if (event.columnFilters['name']) {
-      const q = event.columnFilters['name'].toLowerCase();
-      result = result.filter(r => r.name.toLowerCase().includes(q));
-    }
-    if (event.columnFilters['isActive'] !== undefined && event.columnFilters['isActive'] !== null) {
-      result = result.filter(r => r.isActive === event.columnFilters['isActive']);
-    }
-    this.data = result;
+  onLazyLoad(event: TableLazyLoadEvent): void {
+    this.tableState = event;
+    this.loadData(event);
   }
 
   onAdd(): void {
@@ -107,7 +106,7 @@ export class AcademicYearListComponent implements OnInit {
       message: `${this.translate.instant('SETUP.CONFIRM_DELETE')} "${row.name}"?`,
       accept: () => {
         this.storage.delete('academic_years', row.id);
-        this.loadData();
+        this.loadData(this.tableState);
         this.messageService.add({ severity: 'success', summary: this.translate.instant('SETUP.SUCCESS'), detail: this.translate.instant('SETUP.DELETED_SUCCESSFULLY'), life: 3000 });
       }
     });

@@ -17,6 +17,8 @@ import { MessageService, ConfirmationService } from 'primeng/api';
 import { StorageService } from '../../../core/services/storage.service';
 import { TenantService } from '../../../core/services/tenant.service';
 import { AcademicYear } from '../../../core/models/academic-year.model';
+import { ServerTableService } from '../../../core/services/server-table.service';
+import { TableLazyLoadEvent } from '../../../shared/components/data-table/data-table.models';
 
 @Component({
   selector: 'app-academic-year',
@@ -38,13 +40,17 @@ export class AcademicYearComponent implements OnInit {
   private confirmationService = inject(ConfirmationService);
   private translate = inject(TranslateService);
   private router = inject(Router);
+  private serverTable = inject(ServerTableService);
 
   academicYears = signal<AcademicYear[]>([]);
+  displayedAcademicYears = signal<AcademicYear[]>([]);
   dialogVisible = false;
   isEditMode = signal(false);
   editingId = signal<string | null>(null);
   form!: FormGroup;
   loading = false;
+  totalRecords = 0;
+  tableState: TableLazyLoadEvent = { page: 0, rows: 10, first: 0, columnFilters: {} };
 
   ngOnInit(): void {
     this.initForm();
@@ -61,6 +67,32 @@ export class AcademicYearComponent implements OnInit {
 
   private loadData(): void {
     this.academicYears.set(this.storage.get<AcademicYear>('academic_years'));
+    this.applyTableQuery();
+  }
+
+  private applyTableQuery(): void {
+    const result = this.serverTable.query(this.academicYears(), this.tableState, {
+      globalSearchFields: ['name']
+    });
+    this.displayedAcademicYears.set(result.data);
+    this.totalRecords = result.totalRecords;
+  }
+
+  onGlobalSearch(value: string): void {
+    this.tableState = { ...this.tableState, globalSearch: value, first: 0, page: 0 };
+    this.applyTableQuery();
+  }
+
+  onLazyLoad(event: any): void {
+    this.tableState = {
+      ...this.tableState,
+      page: Math.floor((event.first ?? 0) / (event.rows ?? this.tableState.rows)),
+      rows: event.rows ?? this.tableState.rows,
+      first: event.first ?? this.tableState.first,
+      sortField: event.sortField ?? this.tableState.sortField,
+      sortOrder: event.sortOrder === -1 ? 'desc' : event.sortOrder === 1 ? 'asc' : this.tableState.sortOrder
+    };
+    this.applyTableQuery();
   }
 
   private initForm(): void {

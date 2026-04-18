@@ -14,7 +14,8 @@ import { StorageService } from '../../../core/services/storage.service';
 import { TenantService } from '../../../core/services/tenant.service';
 import { ExportService } from '../../../shared/utils/export.service';
 import { DataTableComponent } from '../../../shared/components/data-table/data-table.component';
-import { TableConfig, TableFilterEvent } from '../../../shared/components/data-table/data-table.models';
+import { TableConfig, TableLazyLoadEvent } from '../../../shared/components/data-table/data-table.models';
+import { ServerTableService } from '../../../core/services/server-table.service';
 
 @Component({
   selector: 'app-parent-list',
@@ -33,10 +34,12 @@ export class ParentListComponent implements OnInit {
   private confirmationService = inject(ConfirmationService);
   private translate = inject(TranslateService);
   private exportService = inject(ExportService);
+  private serverTable = inject(ServerTableService);
 
-  allData: any[] = [];
   data: any[] = [];
+  totalRecords = 0;
   loading = false;
+  tableState: TableLazyLoadEvent = { page: 0, rows: 10, first: 0, columnFilters: {} };
 
   showPasswordDialog = false;
   newPassword = '';
@@ -76,15 +79,15 @@ export class ParentListComponent implements OnInit {
   };
 
   ngOnInit(): void {
-    this.loadData();
+    this.loadData(this.tableState);
   }
 
-  loadData(): void {
+  loadData(request: TableLazyLoadEvent): void {
     this.loading = true;
     const parents = this.parentService.getAll();
     const students = this.storage.get<Student>('students');
 
-    this.allData = parents.map(p => {
+    const rows = parents.map(p => {
       const childNames = p.studentIds
         .map(sid => students.find(s => s.id === sid)?.name ?? '')
         .filter(n => n)
@@ -102,8 +105,17 @@ export class ParentListComponent implements OnInit {
       return { ...p, childrenNames: childNames, loginStatus };
     });
 
-    this.data = [...this.allData];
+    const result = this.serverTable.query(rows, request, {
+      globalSearchFields: ['name', 'email', 'phone', 'relation', 'childrenNames']
+    });
+    this.data = result.data;
+    this.totalRecords = result.totalRecords;
     this.loading = false;
+  }
+
+  onLazyLoad(event: TableLazyLoadEvent): void {
+    this.tableState = event;
+    this.loadData(event);
   }
 
   onAdd(): void {
@@ -131,7 +143,7 @@ export class ParentListComponent implements OnInit {
       message: this.translate.instant('PARENTS.CONFIRM_DELETE'),
       accept: () => {
         this.parentService.delete(row.id);
-        this.loadData();
+        this.loadData(this.tableState);
         this.messageService.add({
           severity: 'success',
           summary: this.translate.instant('SETUP.SUCCESS'),
@@ -147,7 +159,7 @@ export class ParentListComponent implements OnInit {
       message: this.translate.instant('PARENTS.RESET_PASSWORD_CONFIRM'),
       accept: () => {
         const newPwd = this.parentService.resetPassword(row.id);
-        this.loadData();
+        this.loadData(this.tableState);
         this.newPassword = newPwd;
         this.resetParentName = row.name;
         this.showPasswordDialog = true;
@@ -163,7 +175,7 @@ export class ParentListComponent implements OnInit {
       message: `${action} this parent account?`,
       accept: () => {
         this.parentService.toggleActive(row.id);
-        this.loadData();
+        this.loadData(this.tableState);
         this.messageService.add({
           severity: 'success',
           summary: this.translate.instant('SETUP.SUCCESS'),
@@ -174,28 +186,6 @@ export class ParentListComponent implements OnInit {
         });
       }
     });
-  }
-
-  onFilter(event: TableFilterEvent): void {
-    let filtered = [...this.allData];
-    if (event.globalSearch) {
-      const q = event.globalSearch.toLowerCase();
-      filtered = filtered.filter(r =>
-        r.name?.toLowerCase().includes(q) ||
-        r.email?.toLowerCase().includes(q) ||
-        r.phone?.toLowerCase().includes(q) ||
-        r.relation?.toLowerCase().includes(q) ||
-        r.childrenNames?.toLowerCase().includes(q)
-      );
-    }
-    if (event.columnFilters) {
-      Object.entries(event.columnFilters).forEach(([field, value]) => {
-        if (value !== null && value !== undefined && value !== '') {
-          filtered = filtered.filter(r => String(r[field]).toLowerCase().includes(String(value).toLowerCase()));
-        }
-      });
-    }
-    this.data = filtered;
   }
 
   copyPassword(): void {

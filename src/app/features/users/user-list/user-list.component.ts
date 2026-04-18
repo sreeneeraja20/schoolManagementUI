@@ -12,7 +12,8 @@ import { AuthService } from '../../../core/services/auth.service';
 import { User } from '../../../core/models/user.model';
 import { Staff } from '../../../core/models/staff.model';
 import { DataTableComponent } from '../../../shared/components/data-table/data-table.component';
-import { TableConfig, TableFilterEvent } from '../../../shared/components/data-table/data-table.models';
+import { TableConfig, TableLazyLoadEvent } from '../../../shared/components/data-table/data-table.models';
+import { ServerTableService } from '../../../core/services/server-table.service';
 
 @Component({
   selector: 'app-user-list',
@@ -30,10 +31,12 @@ export class UserListComponent implements OnInit {
   private messageService = inject(MessageService);
   private confirmationService = inject(ConfirmationService);
   private translate = inject(TranslateService);
+  private serverTable = inject(ServerTableService);
 
-  allData: any[] = [];
   data: any[] = [];
+  totalRecords = 0;
   loading = false;
+  tableState: TableLazyLoadEvent = { page: 0, rows: 10, first: 0, columnFilters: {} };
 
   tableConfig: TableConfig = {
     columns: [
@@ -79,21 +82,30 @@ export class UserListComponent implements OnInit {
   };
 
   ngOnInit(): void {
-    this.loadData();
+    this.loadData(this.tableState);
   }
 
-  loadData(): void {
+  loadData(request: TableLazyLoadEvent): void {
     this.loading = true;
     const users = this.storage.get<User>('users');
     const staff = this.storage.get<Staff>('staff');
-    this.allData = users.map(u => ({
+    const rows = users.map(u => ({
       ...u,
       isActive: u.isActive,
       isFirstLogin: u.isFirstLogin,
       staffName: staff.find(s => s.id === u.staffId)?.name ?? this.translate.instant('USERS.NOT_LINKED')
     }));
-    this.data = [...this.allData];
+    const result = this.serverTable.query(rows, request, {
+      globalSearchFields: ['name', 'email', 'role', 'staffName']
+    });
+    this.data = result.data;
+    this.totalRecords = result.totalRecords;
     this.loading = false;
+  }
+
+  onLazyLoad(event: TableLazyLoadEvent): void {
+    this.tableState = event;
+    this.loadData(event);
   }
 
   onAdd(): void {
@@ -122,7 +134,7 @@ export class UserListComponent implements OnInit {
       message: this.translate.instant('USERS.CONFIRM_DELETE'),
       accept: () => {
         this.storage.delete('users', row.id);
-        this.loadData();
+        this.loadData(this.tableState);
         this.messageService.add({ severity: 'success', summary: this.translate.instant('SETUP.SUCCESS'), detail: this.translate.instant('USERS.DELETED'), life: 3000 });
       }
     });
@@ -137,7 +149,7 @@ export class UserListComponent implements OnInit {
         const suffix = String(randomBytes[0] % 9000 + 1000);
         const tempPassword = 'TempPass@' + suffix;
         this.storage.update<User>('users', row.id, { password: tempPassword, isFirstLogin: true });
-        this.loadData();
+        this.loadData(this.tableState);
         this.messageService.add({
           severity: 'success',
           summary: this.translate.instant('SETUP.SUCCESS'),
@@ -164,31 +176,11 @@ export class UserListComponent implements OnInit {
     }
     const newStatus = !row.isActive;
     this.storage.update<User>('users', row.id, { isActive: newStatus });
-    this.loadData();
+    this.loadData(this.tableState);
     const detail = newStatus
       ? this.translate.instant('USERS.ACTIVATED')
       : this.translate.instant('USERS.DEACTIVATED');
     this.messageService.add({ severity: 'success', summary: this.translate.instant('SETUP.SUCCESS'), detail, life: 3000 });
   }
 
-  onFilter(event: TableFilterEvent): void {
-    let filtered = [...this.allData];
-    if (event.globalSearch) {
-      const q = event.globalSearch.toLowerCase();
-      filtered = filtered.filter(r =>
-        r.name?.toLowerCase().includes(q) ||
-        r.email?.toLowerCase().includes(q) ||
-        r.role?.toLowerCase().includes(q) ||
-        r.staffName?.toLowerCase().includes(q)
-      );
-    }
-    if (event.columnFilters) {
-      Object.entries(event.columnFilters).forEach(([field, value]) => {
-        if (value !== null && value !== undefined && value !== '') {
-          filtered = filtered.filter(r => String(r[field]).toLowerCase().includes(String(value).toLowerCase()));
-        }
-      });
-    }
-    this.data = filtered;
-  }
 }

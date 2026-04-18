@@ -18,6 +18,8 @@ import { SetupBannerComponent } from '../../../shared/components/setup-banner/se
 import { Class } from '../../../core/models/class.model';
 import { AcademicYear } from '../../../core/models/academic-year.model';
 import { Section } from '../../../core/models/section.model';
+import { ServerTableService } from '../../../core/services/server-table.service';
+import { TableLazyLoadEvent } from '../../../shared/components/data-table/data-table.models';
 
 @Component({
   selector: 'app-class',
@@ -40,8 +42,10 @@ export class ClassComponent implements OnInit {
   private confirmationService = inject(ConfirmationService);
   private translate = inject(TranslateService);
   private router = inject(Router);
+  private serverTable = inject(ServerTableService);
 
   classes = signal<Class[]>([]);
+  displayedClasses = signal<Class[]>([]);
   sections = signal<Section[]>([]);
   activeYear = signal<AcademicYear | null>(null);
   dialogVisible = false;
@@ -49,6 +53,8 @@ export class ClassComponent implements OnInit {
   editingId = signal<string | null>(null);
   form!: FormGroup;
   loading = false;
+  totalRecords = 0;
+  tableState: TableLazyLoadEvent = { page: 0, rows: 10, first: 0, columnFilters: {} };
 
   ngOnInit(): void {
     this.seedService.seed();
@@ -71,6 +77,32 @@ export class ClassComponent implements OnInit {
     const allClasses = this.storage.get<Class>('classes');
     this.classes.set(active ? allClasses.filter(c => c.academicYearId === active.id) : []);
     this.sections.set(this.storage.get<Section>('sections'));
+    this.applyTableQuery();
+  }
+
+  private applyTableQuery(): void {
+    const result = this.serverTable.query(this.classes(), this.tableState, {
+      globalSearchFields: ['name']
+    });
+    this.displayedClasses.set(result.data);
+    this.totalRecords = result.totalRecords;
+  }
+
+  onGlobalSearch(value: string): void {
+    this.tableState = { ...this.tableState, globalSearch: value, first: 0, page: 0 };
+    this.applyTableQuery();
+  }
+
+  onLazyLoad(event: any): void {
+    this.tableState = {
+      ...this.tableState,
+      page: Math.floor((event.first ?? 0) / (event.rows ?? this.tableState.rows)),
+      rows: event.rows ?? this.tableState.rows,
+      first: event.first ?? this.tableState.first,
+      sortField: event.sortField ?? this.tableState.sortField,
+      sortOrder: event.sortOrder === -1 ? 'desc' : event.sortOrder === 1 ? 'asc' : this.tableState.sortOrder
+    };
+    this.applyTableQuery();
   }
 
   private initForm(): void {

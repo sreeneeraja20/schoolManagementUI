@@ -14,12 +14,13 @@
   <app-data-table
     [config]="tableConfig"
     [data]="data"
+    [totalRecords]="totalRecords"
     [loading]="loading"
      (addClick)="onAdd()"
     (editClick)="onEdit($event)"
     (viewClick)="onView($event)"
     (deleteClick)="onDelete($event)"
-    (filterChange)="onFilter($event)">
+    (lazyLoad)="onLazyLoad($event)">
 </app-data-table>
 
   <p-confirmDialog></p-confirmDialog>

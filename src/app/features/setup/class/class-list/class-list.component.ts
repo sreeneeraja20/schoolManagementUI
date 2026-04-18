@@ -11,10 +11,11 @@ import { TenantService } from '../../../../core/services/tenant.service';
 import { SeedDataService } from '../../../../core/services/seed-data.service';
 import { SetupBannerComponent } from '../../../../shared/components/setup-banner/setup-banner.component';
 import { DataTableComponent } from '../../../../shared/components/data-table/data-table.component';
-import { TableConfig, TableFilterEvent } from '../../../../shared/components/data-table/data-table.models';
+import { TableConfig, TableLazyLoadEvent } from '../../../../shared/components/data-table/data-table.models';
 import { Class } from '../../../../core/models/class.model';
 import { AcademicYear } from '../../../../core/models/academic-year.model';
 import { Section } from '../../../../core/models/section.model';
+import { ServerTableService } from '../../../../core/services/server-table.service';
 
 @Component({
   selector: 'app-class-list',
@@ -32,12 +33,14 @@ export class ClassListComponent implements OnInit {
   private messageService = inject(MessageService);
   private confirmationService = inject(ConfirmationService);
   private translate = inject(TranslateService);
+  private serverTable = inject(ServerTableService);
 
-  allData: any[] = [];
   data: any[] = [];
+  totalRecords = 0;
   loading = false;
   hasActiveYear = false;
   sections: Section[] = [];
+  tableState: TableLazyLoadEvent = { page: 0, rows: 10, first: 0, columnFilters: {} };
 
   tableConfig: TableConfig = {
     columns: [
@@ -61,34 +64,30 @@ export class ClassListComponent implements OnInit {
 
   ngOnInit(): void {
     this.seedService.seed();
-    this.loadData();
+    this.loadData(this.tableState);
   }
 
-  loadData(): void {
+  loadData(request: TableLazyLoadEvent): void {
     const years = this.storage.get<AcademicYear>('academic_years');
     const active = years.find(y => y.isActive);
     this.hasActiveYear = !!active;
     this.sections = this.storage.get<Section>('sections');
     const allClasses = this.storage.get<Class>('classes');
     const filtered = active ? allClasses.filter(c => c.academicYearId === active.id) : [];
-    this.allData = filtered.map(c => ({
+    const rows = filtered.map(c => ({
       ...c,
       sectionNames: this.sections.filter(s => s.classId === c.id).map(s => s.name)
     }));
-    this.data = [...this.allData];
+    const result = this.serverTable.query(rows, request, {
+      globalSearchFields: ['name']
+    });
+    this.data = result.data;
+    this.totalRecords = result.totalRecords;
   }
 
-  onFilter(event: TableFilterEvent): void {
-    let result = [...this.allData];
-    if (event.globalSearch) {
-      const q = event.globalSearch.toLowerCase();
-      result = result.filter(r => r.name.toLowerCase().includes(q));
-    }
-    if (event.columnFilters['name']) {
-      const q = event.columnFilters['name'].toLowerCase();
-      result = result.filter(r => r.name.toLowerCase().includes(q));
-    }
-    this.data = result;
+  onLazyLoad(event: TableLazyLoadEvent): void {
+    this.tableState = event;
+    this.loadData(event);
   }
 
   onAdd(): void {
@@ -113,7 +112,7 @@ export class ClassListComponent implements OnInit {
           this.storage.set('sections', updatedSections);
         }
         this.storage.delete('classes', row.id);
-        this.loadData();
+        this.loadData(this.tableState);
         this.messageService.add({ severity: 'success', summary: this.translate.instant('SETUP.SUCCESS'), detail: this.translate.instant('SETUP.DELETED_SUCCESSFULLY'), life: 3000 });
       }
     });

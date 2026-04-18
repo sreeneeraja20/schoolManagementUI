@@ -10,12 +10,13 @@ import { StorageService } from '../../../core/services/storage.service';
 import { TenantService } from '../../../core/services/tenant.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { DataTableComponent } from '../../../shared/components/data-table/data-table.component';
-import { TableConfig, TableFilterEvent } from '../../../shared/components/data-table/data-table.models';
+import { TableConfig, TableLazyLoadEvent } from '../../../shared/components/data-table/data-table.models';
 import { Staff } from '../../../core/models/staff.model';
 import { Subject } from '../../../core/models/subject.model';
 import { CsvImportDialogComponent, CsvImportConfig } from '../../../shared/components/csv-import-dialog/csv-import-dialog.component';
 import { ExportService } from '../../../shared/utils/export.service';
 import { getAuditFieldsForCreate } from '../../../shared/utils/audit.util';
+import { ServerTableService } from '../../../core/services/server-table.service';
 
 @Component({
   selector: 'app-staff-list',
@@ -34,6 +35,7 @@ export class StaffListComponent implements OnInit {
   private confirmationService = inject(ConfirmationService);
   private translate = inject(TranslateService);
   private exportService = inject(ExportService);
+  private serverTable = inject(ServerTableService);
 
   showImportDialog = false;
 
@@ -52,10 +54,11 @@ export class StaffListComponent implements OnInit {
     templateFilename: 'staff'
   };
 
-  allData: any[] = [];
   data: any[] = [];
+  totalRecords = 0;
   loading = false;
   subjects: Subject[] = [];
+  tableState: TableLazyLoadEvent = { page: 0, rows: 10, first: 0, columnFilters: {} };
 
   tableConfig: TableConfig = {
     columns: [
@@ -89,34 +92,29 @@ export class StaffListComponent implements OnInit {
   };
 
   ngOnInit(): void {
-    this.loadData();
+    this.loadData(this.tableState);
   }
 
-  loadData(): void {
+  loadData(request: TableLazyLoadEvent): void {
     this.subjects = this.storage.get<Subject>('subjects');
     const staff = this.storage.get<Staff>('staff');
-    this.allData = staff.map(s => ({
+    const rows = staff.map(s => ({
       ...s,
       subjectNames: (s.subjectIds ?? []).map(id => this.subjects.find(sub => sub.id === id)?.name ?? id)
     }));
-    this.data = [...this.allData];
+    const result = this.serverTable.query(rows, request, {
+      globalSearchFields: ['name', 'email', 'role'],
+      customFilters: {
+        role: (row, value) => row.role === value
+      }
+    });
+    this.data = result.data;
+    this.totalRecords = result.totalRecords;
   }
 
-  onFilter(event: TableFilterEvent): void {
-    let result = [...this.allData];
-    if (event.globalSearch) {
-      const q = event.globalSearch.toLowerCase();
-      result = result.filter(r =>
-        r.name.toLowerCase().includes(q) ||
-        r.email.toLowerCase().includes(q) ||
-        r.role.toLowerCase().includes(q)
-      );
-    }
-    const cf = event.columnFilters;
-    if (cf['name']) result = result.filter(r => r.name.toLowerCase().includes(cf['name'].toLowerCase()));
-    if (cf['email']) result = result.filter(r => r.email.toLowerCase().includes(cf['email'].toLowerCase()));
-    if (cf['role']) result = result.filter(r => r.role === cf['role']);
-    this.data = result;
+  onLazyLoad(event: TableLazyLoadEvent): void {
+    this.tableState = event;
+    this.loadData(event);
   }
 
   onAdd(): void {
@@ -152,7 +150,7 @@ export class StaffListComponent implements OnInit {
       this.storage.add<Staff>('staff', newStaff);
       imported++;
     }
-    this.loadData();
+    this.loadData(this.tableState);
     this.messageService.add({ severity: 'success', summary: this.translate.instant('SETUP.SUCCESS'), detail: this.translate.instant('IMPORT.SUCCESS', { count: imported }), life: 4000 });
   }
 
@@ -193,7 +191,7 @@ export class StaffListComponent implements OnInit {
       message: this.translate.instant('STAFF.CONFIRM_DELETE'),
       accept: () => {
         this.storage.delete('staff', row.id);
-        this.loadData();
+        this.loadData(this.tableState);
         this.messageService.add({ severity: 'success', summary: this.translate.instant('SETUP.SUCCESS'), detail: this.translate.instant('STAFF.DELETED'), life: 3000 });
       }
     });

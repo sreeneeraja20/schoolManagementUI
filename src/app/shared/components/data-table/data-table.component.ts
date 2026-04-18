@@ -11,7 +11,7 @@ import { CalendarModule } from 'primeng/calendar';
 import { TagModule } from 'primeng/tag';
 import { TooltipModule } from 'primeng/tooltip';
 import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
-import { TableColumn, TableConfig, TableSortEvent, TableFilterEvent, TablePageEvent } from './data-table.models';
+import { TableColumn, TableConfig, TableSortEvent, TableFilterEvent, TablePageEvent, TableLazyLoadEvent } from './data-table.models';
 import { Menu, MenuModule } from 'primeng/menu';
 import { MenuItem } from 'primeng/api';
 
@@ -37,6 +37,7 @@ export class DataTableComponent implements OnInit, OnDestroy {
   @Output() sortChange = new EventEmitter<TableSortEvent>();
   @Output() filterChange = new EventEmitter<TableFilterEvent>();
   @Output() pageChange = new EventEmitter<TablePageEvent>();
+  @Output() lazyLoad = new EventEmitter<TableLazyLoadEvent>();
   @Output() addClick = new EventEmitter<void>();
   @Output() editClick = new EventEmitter<any>();
   @Output() deleteClick = new EventEmitter<any>();
@@ -49,6 +50,8 @@ export class DataTableComponent implements OnInit, OnDestroy {
   globalSearchValue = '';
   columnFilters: Record<string, any> = {};
   currentSort: { field: string; order: number } | null = null;
+  currentFirst = 0;
+  currentRows = 10;
   booleanOptions = [
     { label: 'Yes', value: true },
     { label: 'No', value: false }
@@ -64,6 +67,7 @@ export class DataTableComponent implements OnInit, OnDestroy {
   private searchSubject = new Subject<string>();
 
   ngOnInit(): void {
+    this.currentRows = this.defaultRows;
     this.searchSubject.pipe(debounceTime(300), distinctUntilChanged()).subscribe(() => {
       this.emitFilter();
     });
@@ -120,18 +124,34 @@ export class DataTableComponent implements OnInit, OnDestroy {
     this.emitFilter();
   }
 
-  onSort(event: any): void {
-    if (event.field) {
-      this.sortChange.emit({ field: event.field, order: event.order === 1 ? 'asc' : 'desc' });
-    }
-  }
-
-  onPage(event: any): void {
-    this.pageChange.emit({ page: Math.floor(event.first / event.rows), rows: event.rows, first: event.first });
-  }
-
   private emitFilter(): void {
-    this.filterChange.emit({ globalSearch: this.globalSearchValue, columnFilters: { ...this.columnFilters } });
+    this.currentFirst = 0;
+    this.emitLazyLoad();
+  }
+
+  onLazyLoad(event: any): void {
+    this.currentFirst = event?.first ?? this.currentFirst;
+    this.currentRows = event?.rows ?? this.currentRows;
+    this.currentSort = event?.sortField ? { field: event.sortField, order: event.sortOrder ?? 1 } : this.currentSort;
+    this.emitLazyLoad();
+  }
+
+  private emitLazyLoad(): void {
+    const payload: TableLazyLoadEvent = {
+      page: Math.floor(this.currentFirst / this.currentRows),
+      rows: this.currentRows,
+      first: this.currentFirst,
+      sortField: this.currentSort?.field,
+      sortOrder: this.currentSort ? (this.currentSort.order === 1 ? 'asc' : 'desc') : undefined,
+      globalSearch: this.globalSearchValue,
+      columnFilters: { ...this.columnFilters }
+    };
+    if (payload.sortField && payload.sortOrder) {
+      this.sortChange.emit({ field: payload.sortField, order: payload.sortOrder });
+    }
+    this.pageChange.emit({ page: payload.page, rows: payload.rows, first: payload.first });
+    this.filterChange.emit({ globalSearch: payload.globalSearch, columnFilters: payload.columnFilters });
+    this.lazyLoad.emit(payload);
   }
 
   getBadgeLabel(col: TableColumn, value: any): string {

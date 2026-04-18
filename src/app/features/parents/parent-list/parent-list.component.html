@@ -29,6 +29,7 @@
   <app-data-table
     [config]="tableConfig"
     [data]="data"
+    [totalRecords]="totalRecords"
     [loading]="loading"
     (addClick)="onAdd()"
     (viewClick)="onView($event)"
@@ -36,7 +37,7 @@
     (deleteClick)="onDelete($event)"
     (resetPasswordClick)="onResetPassword($event)"
     (toggleActiveClick)="onToggleActive($event)"
-    (filterChange)="onFilter($event)"
+    (lazyLoad)="onLazyLoad($event)"
   />
 </div>
 

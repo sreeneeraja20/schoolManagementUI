@@ -12,11 +12,12 @@ import { StorageService } from '../../../core/services/storage.service';
 import { TenantService } from '../../../core/services/tenant.service';
 import { ExportService } from '../../../shared/utils/export.service';
 import { DataTableComponent } from '../../../shared/components/data-table/data-table.component';
-import { TableConfig, TableFilterEvent } from '../../../shared/components/data-table/data-table.models';
+import { TableConfig, TableLazyLoadEvent } from '../../../shared/components/data-table/data-table.models';
 import { AttendanceRecord } from '../../../core/models/attendance.model';
 import { Student } from '../../../core/models/student.model';
 import { Class } from '../../../core/models/class.model';
 import { Section } from '../../../core/models/section.model';
+import { ServerTableService } from '../../../core/services/server-table.service';
 
 @Component({
   selector: 'app-attendance-report',
@@ -34,6 +35,7 @@ export class AttendanceReportComponent implements OnInit {
   private tenantService = inject(TenantService);
   private router = inject(Router);
   private exportService = inject(ExportService);
+  private serverTable = inject(ServerTableService);
 
   fromDate: Date | null = null;
   toDate: Date | null = null;
@@ -45,8 +47,10 @@ export class AttendanceReportComponent implements OnInit {
   classOptions: { label: string; value: string }[] = [];
   sectionOptions: { label: string; value: string }[] = [];
 
-  allData: any[] = [];
+  baseData: any[] = [];
   data: any[] = [];
+  totalRecords = 0;
+  tableState: TableLazyLoadEvent = { page: 0, rows: 25, first: 0, columnFilters: {} };
   totalPresent = 0;
   totalAbsent = 0;
   totalLate = 0;
@@ -97,7 +101,7 @@ export class AttendanceReportComponent implements OnInit {
     const students = this.storage.get<Student>('students');
     const records = this.storage.get<AttendanceRecord>('attendance');
 
-    this.allData = records.map(r => {
+    this.baseData = records.map(r => {
       const student = students.find(s => s.id === r.studentId);
       return {
         ...r,
@@ -112,7 +116,7 @@ export class AttendanceReportComponent implements OnInit {
   }
 
   applyFilters(): void {
-    let result = [...this.allData];
+    let result = [...this.baseData];
 
     if (this.fromDate) {
       const from = this.fromDate.toISOString().split('T')[0];
@@ -129,28 +133,25 @@ export class AttendanceReportComponent implements OnInit {
       result = result.filter(r => r.sectionId === this.selectedSectionId);
     }
 
-    this.data = result;
-    this.computeStats();
+    this.computeStats(result);
+    const queried = this.serverTable.query(result, this.tableState, {
+      globalSearchFields: ['studentName', 'rollNumber']
+    });
+    this.data = queried.data;
+    this.totalRecords = queried.totalRecords;
   }
 
-  computeStats(): void {
-    this.totalPresent = this.data.filter(r => r.status === 'PRESENT').length;
-    this.totalAbsent = this.data.filter(r => r.status === 'ABSENT').length;
-    this.totalLate = this.data.filter(r => r.status === 'LATE').length;
-    const total = this.data.length;
+  computeStats(rows: any[]): void {
+    this.totalPresent = rows.filter(r => r.status === 'PRESENT').length;
+    this.totalAbsent = rows.filter(r => r.status === 'ABSENT').length;
+    this.totalLate = rows.filter(r => r.status === 'LATE').length;
+    const total = rows.length;
     this.attendancePercent = total > 0 ? Math.round(((this.totalPresent + this.totalLate) / total) * 100) : 0;
   }
 
-  onFilter(event: TableFilterEvent): void {
-    let result = [...this.data];
-    if (event.globalSearch) {
-      const q = event.globalSearch.toLowerCase();
-      result = result.filter(r =>
-        r.studentName.toLowerCase().includes(q) ||
-        r.rollNumber.toLowerCase().includes(q)
-      );
-    }
-    this.data = result;
+  onLazyLoad(event: TableLazyLoadEvent): void {
+    this.tableState = event;
+    this.applyFilters();
   }
 
   goToMarking(): void {
