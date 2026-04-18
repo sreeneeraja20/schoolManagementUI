@@ -19,7 +19,6 @@ import { AcademicYear } from '../../../core/models/academic-year.model';
 import { CsvImportDialogComponent, CsvImportConfig } from '../../../shared/components/csv-import-dialog/csv-import-dialog.component';
 import { ExportService } from '../../../shared/utils/export.service';
 import { getAuditFieldsForCreate } from '../../../shared/utils/audit.util';
-import { ServerTableService } from '../../../core/services/server-table.service';
 
 @Component({
   selector: 'app-student-list',
@@ -38,7 +37,6 @@ export class StudentListComponent implements OnInit {
   private confirmationService = inject(ConfirmationService);
   private translate = inject(TranslateService);
   private exportService = inject(ExportService);
-  private serverTable = inject(ServerTableService);
 
   showImportDialog = false;
 
@@ -109,21 +107,27 @@ export class StudentListComponent implements OnInit {
     this.tableConfig.columns[2].filterOptions = this.classes.map(c => ({ label: c.name, value: c.id }));
     this.tableConfig.columns[3].filterOptions = this.sections.map(s => ({ label: s.name, value: s.id }));
 
-    const students = this.storage.get<Student>('students');
-    const rows = (active ? students.filter(s => s.academicYearId === active.id) : students).map(s => ({
-      ...s,
-      className: this.classes.find(c => c.id === s.classId)?.name ?? s.classId,
-      sectionName: this.sections.find(sec => sec.id === s.sectionId)?.name ?? s.sectionId
-    }));
-    const result = this.serverTable.query(rows, request, {
+    const queryRequest: TableLazyLoadEvent = {
+      ...request,
+      columnFilters: {
+        ...request.columnFilters,
+        ...(active ? { academicYearId: active.id } : {})
+      }
+    };
+    const result = this.storage.getPage<Student>('students', queryRequest, {
       globalSearchFields: ['name', 'rollNumber', 'parentName'],
       customFilters: {
+        academicYearId: (row, value) => row.academicYearId === value,
         className: (row, value) => row.classId === value,
         sectionName: (row, value) => row.sectionId === value,
         gender: (row, value) => row.gender === value
       }
     });
-    this.data = result.data;
+    this.data = result.data.map(s => ({
+      ...s,
+      className: this.classes.find(c => c.id === s.classId)?.name ?? s.classId,
+      sectionName: this.sections.find(sec => sec.id === s.sectionId)?.name ?? s.sectionId
+    }));
     this.totalRecords = result.totalRecords;
   }
 

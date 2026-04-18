@@ -15,7 +15,6 @@ import { TableConfig, TableLazyLoadEvent } from '../../../../shared/components/d
 import { Section } from '../../../../core/models/section.model';
 import { Class } from '../../../../core/models/class.model';
 import { AcademicYear } from '../../../../core/models/academic-year.model';
-import { ServerTableService } from '../../../../core/services/server-table.service';
 
 @Component({
   selector: 'app-section-list',
@@ -33,7 +32,6 @@ export class SectionListComponent implements OnInit {
   private messageService = inject(MessageService);
   private confirmationService = inject(ConfirmationService);
   private translate = inject(TranslateService);
-  private serverTable = inject(ServerTableService);
 
   data: any[] = [];
   totalRecords = 0;
@@ -73,15 +71,19 @@ export class SectionListComponent implements OnInit {
     const allClasses = this.storage.get<Class>('classes');
     this.classes = active ? allClasses.filter(c => c.academicYearId === active.id) : allClasses;
     this.hasClasses = this.classes.length > 0;
-    const sections = this.storage.get<Section>('sections');
-    const rows = sections.map(s => ({
+    const result = this.storage.getPage<Section>('sections', request, {
+      globalSearchFields: ['name'],
+      customFilters: {
+        className: (row, value) =>
+          (this.classes.find(c => c.id === row.classId)?.name ?? row.classId)
+            .toLowerCase()
+            .includes(String(value).toLowerCase())
+      }
+    });
+    this.data = result.data.map(s => ({
       ...s,
       className: this.classes.find(c => c.id === s.classId)?.name ?? s.classId
     }));
-    const result = this.serverTable.query(rows, request, {
-      globalSearchFields: ['name', 'className']
-    });
-    this.data = result.data;
     this.totalRecords = result.totalRecords;
   }
 

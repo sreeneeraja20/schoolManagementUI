@@ -13,7 +13,6 @@ import { User } from '../../../core/models/user.model';
 import { Staff } from '../../../core/models/staff.model';
 import { DataTableComponent } from '../../../shared/components/data-table/data-table.component';
 import { TableConfig, TableLazyLoadEvent } from '../../../shared/components/data-table/data-table.models';
-import { ServerTableService } from '../../../core/services/server-table.service';
 
 @Component({
   selector: 'app-user-list',
@@ -31,7 +30,6 @@ export class UserListComponent implements OnInit {
   private messageService = inject(MessageService);
   private confirmationService = inject(ConfirmationService);
   private translate = inject(TranslateService);
-  private serverTable = inject(ServerTableService);
 
   data: any[] = [];
   totalRecords = 0;
@@ -87,18 +85,26 @@ export class UserListComponent implements OnInit {
 
   loadData(request: TableLazyLoadEvent): void {
     this.loading = true;
-    const users = this.storage.get<User>('users');
+    const queryRequest: TableLazyLoadEvent = {
+      ...request,
+      columnFilters: {
+        ...request.columnFilters,
+        tenantId: this.tenantService.getTenantId()
+      }
+    };
+    const result = this.storage.getPage<User>('users', queryRequest, {
+      globalSearchFields: ['name', 'email', 'role'],
+      customFilters: {
+        tenantId: (row, value) => row.tenantId === value
+      }
+    });
     const staff = this.storage.get<Staff>('staff');
-    const rows = users.map(u => ({
+    this.data = result.data.map(u => ({
       ...u,
       isActive: u.isActive,
       isFirstLogin: u.isFirstLogin,
       staffName: staff.find(s => s.id === u.staffId)?.name ?? this.translate.instant('USERS.NOT_LINKED')
     }));
-    const result = this.serverTable.query(rows, request, {
-      globalSearchFields: ['name', 'email', 'role', 'staffName']
-    });
-    this.data = result.data;
     this.totalRecords = result.totalRecords;
     this.loading = false;
   }

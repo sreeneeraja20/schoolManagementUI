@@ -14,7 +14,6 @@ import { TableConfig, TableLazyLoadEvent } from '../../../shared/components/data
 import { Exam } from '../../../core/models/exam.model';
 import { AcademicYear } from '../../../core/models/academic-year.model';
 import { Class } from '../../../core/models/class.model';
-import { ServerTableService } from '../../../core/services/server-table.service';
 
 @Component({
   selector: 'app-exam-list',
@@ -32,7 +31,6 @@ export class ExamListComponent implements OnInit {
   private messageService = inject(MessageService);
   private confirmationService = inject(ConfirmationService);
   private translate = inject(TranslateService);
-  private serverTable = inject(ServerTableService);
 
   data: any[] = [];
   totalRecords = 0;
@@ -98,16 +96,21 @@ export class ExamListComponent implements OnInit {
 
   loadData(request: TableLazyLoadEvent): void {
     const activeYear = this.storage.get<AcademicYear>('academic_years').find(y => y.isActive);
-    const rows = this.buildRows(this.storage.get<Exam>('exams').filter(e =>
-      !activeYear || e.academicYearId === activeYear.id
-    ));
-    const result = this.serverTable.query(rows, request, {
+    const queryRequest: TableLazyLoadEvent = {
+      ...request,
+      columnFilters: {
+        ...request.columnFilters,
+        ...(activeYear ? { academicYearId: activeYear.id } : {})
+      }
+    };
+    const result = this.storage.getPage<Exam>('exams', queryRequest, {
       globalSearchFields: ['name'],
       customFilters: {
+        academicYearId: (row, value) => row.academicYearId === value,
         type: (row, value) => row.type === value
       }
     });
-    this.data = result.data;
+    this.data = this.buildRows(result.data);
     this.totalRecords = result.totalRecords;
   }
 

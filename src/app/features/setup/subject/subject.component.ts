@@ -18,7 +18,6 @@ import { SetupBannerComponent } from '../../../shared/components/setup-banner/se
 import { Subject } from '../../../core/models/subject.model';
 import { Class } from '../../../core/models/class.model';
 import { AcademicYear } from '../../../core/models/academic-year.model';
-import { ServerTableService } from '../../../core/services/server-table.service';
 import { TableLazyLoadEvent } from '../../../shared/components/data-table/data-table.models';
 
 @Component({
@@ -42,10 +41,8 @@ export class SubjectComponent implements OnInit {
   private confirmationService = inject(ConfirmationService);
   private translate = inject(TranslateService);
   private router = inject(Router);
-  private serverTable = inject(ServerTableService);
 
-  subjects = signal<Subject[]>([]);
-  displayedSubjects = signal<any[]>([]);
+  displayedSubjects = signal<Subject[]>([]);
   classes = signal<Class[]>([]);
   dialogVisible = false;
   isEditMode = signal(false);
@@ -78,16 +75,11 @@ export class SubjectComponent implements OnInit {
     const activeClasses = active ? allClasses.filter(c => c.academicYearId === active.id) : allClasses;
     this.classes.set(activeClasses);
     this.classOptions = activeClasses.map(c => ({ label: c.name, value: c.id }));
-    this.subjects.set(this.storage.get<Subject>('subjects'));
     this.applyTableQuery();
   }
 
   private applyTableQuery(): void {
-    const rows = this.subjects().map(subject => ({
-      ...subject,
-      classNames: this.getClassNames(subject.classIds)
-    }));
-    const result = this.serverTable.query(rows, this.tableState, {
+    const result = this.storage.getPage<Subject>('subjects', this.tableState, {
       globalSearchFields: ['name', 'code']
     });
     this.displayedSubjects.set(result.data);

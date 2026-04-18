@@ -18,7 +18,6 @@ import { SetupBannerComponent } from '../../../shared/components/setup-banner/se
 import { Class } from '../../../core/models/class.model';
 import { AcademicYear } from '../../../core/models/academic-year.model';
 import { Section } from '../../../core/models/section.model';
-import { ServerTableService } from '../../../core/services/server-table.service';
 import { TableLazyLoadEvent } from '../../../shared/components/data-table/data-table.models';
 
 @Component({
@@ -42,9 +41,7 @@ export class ClassComponent implements OnInit {
   private confirmationService = inject(ConfirmationService);
   private translate = inject(TranslateService);
   private router = inject(Router);
-  private serverTable = inject(ServerTableService);
 
-  classes = signal<Class[]>([]);
   displayedClasses = signal<Class[]>([]);
   sections = signal<Section[]>([]);
   activeYear = signal<AcademicYear | null>(null);
@@ -74,15 +71,24 @@ export class ClassComponent implements OnInit {
     const years = this.storage.get<AcademicYear>('academic_years');
     const active = years.find(y => y.isActive) ?? null;
     this.activeYear.set(active);
-    const allClasses = this.storage.get<Class>('classes');
-    this.classes.set(active ? allClasses.filter(c => c.academicYearId === active.id) : []);
     this.sections.set(this.storage.get<Section>('sections'));
     this.applyTableQuery();
   }
 
   private applyTableQuery(): void {
-    const result = this.serverTable.query(this.classes(), this.tableState, {
-      globalSearchFields: ['name']
+    const activeYearId = this.activeYear()?.id;
+    const request: TableLazyLoadEvent = {
+      ...this.tableState,
+      columnFilters: {
+        ...this.tableState.columnFilters,
+        academicYearId: activeYearId ?? '__no_active_year__'
+      }
+    };
+    const result = this.storage.getPage<Class>('classes', request, {
+      globalSearchFields: ['name'],
+      customFilters: {
+        academicYearId: (row, value) => row.academicYearId === value
+      }
     });
     this.displayedClasses.set(result.data);
     this.totalRecords = result.totalRecords;

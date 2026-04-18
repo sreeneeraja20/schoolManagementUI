@@ -15,7 +15,6 @@ import { TenantService } from '../../../core/services/tenant.service';
 import { ExportService } from '../../../shared/utils/export.service';
 import { DataTableComponent } from '../../../shared/components/data-table/data-table.component';
 import { TableConfig, TableLazyLoadEvent } from '../../../shared/components/data-table/data-table.models';
-import { ServerTableService } from '../../../core/services/server-table.service';
 
 @Component({
   selector: 'app-parent-list',
@@ -34,7 +33,6 @@ export class ParentListComponent implements OnInit {
   private confirmationService = inject(ConfirmationService);
   private translate = inject(TranslateService);
   private exportService = inject(ExportService);
-  private serverTable = inject(ServerTableService);
 
   data: any[] = [];
   totalRecords = 0;
@@ -84,10 +82,21 @@ export class ParentListComponent implements OnInit {
 
   loadData(request: TableLazyLoadEvent): void {
     this.loading = true;
-    const parents = this.parentService.getAll();
+    const queryRequest: TableLazyLoadEvent = {
+      ...request,
+      columnFilters: {
+        ...request.columnFilters,
+        tenantId: this.tenantService.getTenantId()
+      }
+    };
+    const result = this.storage.getPage<ParentAccount>('parent_accounts', queryRequest, {
+      globalSearchFields: ['name', 'email', 'phone', 'relation'],
+      customFilters: {
+        tenantId: (row, value) => row.tenantId === value
+      }
+    });
     const students = this.storage.get<Student>('students');
-
-    const rows = parents.map(p => {
+    this.data = result.data.map(p => {
       const childNames = p.studentIds
         .map(sid => students.find(s => s.id === sid)?.name ?? '')
         .filter(n => n)
@@ -104,11 +113,6 @@ export class ParentListComponent implements OnInit {
 
       return { ...p, childrenNames: childNames, loginStatus };
     });
-
-    const result = this.serverTable.query(rows, request, {
-      globalSearchFields: ['name', 'email', 'phone', 'relation', 'childrenNames']
-    });
-    this.data = result.data;
     this.totalRecords = result.totalRecords;
     this.loading = false;
   }

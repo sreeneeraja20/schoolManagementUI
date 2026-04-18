@@ -12,7 +12,6 @@ import { AuthService } from '../../../core/services/auth.service';
 import { DataTableComponent } from '../../../shared/components/data-table/data-table.component';
 import { TableConfig, TableLazyLoadEvent } from '../../../shared/components/data-table/data-table.models';
 import { SchoolEvent } from '../../../core/models/event.model';
-import { ServerTableService } from '../../../core/services/server-table.service';
 
 @Component({
   selector: 'app-event-list',
@@ -30,7 +29,6 @@ export class EventListComponent implements OnInit {
   private messageService = inject(MessageService);
   private confirmationService = inject(ConfirmationService);
   private translate = inject(TranslateService);
-  private serverTable = inject(ServerTableService);
 
   data: SchoolEvent[] = [];
   totalRecords = 0;
@@ -83,8 +81,7 @@ export class EventListComponent implements OnInit {
   }
 
   loadData(request: TableLazyLoadEvent): void {
-    const rows = this.storage.get<SchoolEvent>('events');
-    const result = this.serverTable.query(rows, request, {
+    const result = this.storage.getPage<SchoolEvent>('events', request, {
       globalSearchFields: ['title', 'description'],
       customFilters: {
         type: (row, value) => row.type === value

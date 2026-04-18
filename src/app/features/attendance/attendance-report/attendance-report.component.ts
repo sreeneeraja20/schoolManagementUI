@@ -17,7 +17,6 @@ import { AttendanceRecord } from '../../../core/models/attendance.model';
 import { Student } from '../../../core/models/student.model';
 import { Class } from '../../../core/models/class.model';
 import { Section } from '../../../core/models/section.model';
-import { ServerTableService } from '../../../core/services/server-table.service';
 
 @Component({
   selector: 'app-attendance-report',
@@ -35,7 +34,6 @@ export class AttendanceReportComponent implements OnInit {
   private tenantService = inject(TenantService);
   private router = inject(Router);
   private exportService = inject(ExportService);
-  private serverTable = inject(ServerTableService);
 
   fromDate: Date | null = null;
   toDate: Date | null = null;
@@ -134,7 +132,8 @@ export class AttendanceReportComponent implements OnInit {
     }
 
     this.computeStats(result);
-    const queried = this.serverTable.query(result, this.tableState, {
+    this.storage.set('attendance_report_rows', result);
+    const queried = this.storage.getPage<any>('attendance_report_rows', this.tableState, {
       globalSearchFields: ['studentName', 'rollNumber']
     });
     this.data = queried.data;

@@ -12,7 +12,6 @@ import { SeedDataService } from '../../../../core/services/seed-data.service';
 import { AcademicYear } from '../../../../core/models/academic-year.model';
 import { DataTableComponent } from '../../../../shared/components/data-table/data-table.component';
 import { TableConfig, TableLazyLoadEvent } from '../../../../shared/components/data-table/data-table.models';
-import { ServerTableService } from '../../../../core/services/server-table.service';
 
 @Component({
   selector: 'app-academic-year-list',
@@ -30,7 +29,6 @@ export class AcademicYearListComponent implements OnInit {
   private messageService = inject(MessageService);
   private confirmationService = inject(ConfirmationService);
   private translate = inject(TranslateService);
-  private serverTable = inject(ServerTableService);
 
   data: AcademicYear[] = [];
   totalRecords = 0;
@@ -71,8 +69,7 @@ export class AcademicYearListComponent implements OnInit {
   }
 
   loadData(request: TableLazyLoadEvent): void {
-    const rows = this.storage.get<AcademicYear>('academic_years');
-    const result = this.serverTable.query(rows, request, {
+    const result = this.storage.getPage<AcademicYear>('academic_years', request, {
       globalSearchFields: ['name'],
       customFilters: {
         isActive: (row, value) => row.isActive === value
