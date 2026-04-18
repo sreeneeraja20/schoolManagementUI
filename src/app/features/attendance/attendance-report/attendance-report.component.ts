@@ -47,7 +47,7 @@ export class AttendanceReportComponent implements OnInit {
   classOptions: { label: string; value: string }[] = [];
   sectionOptions: { label: string; value: string }[] = [];
 
-  baseData: any[] = [];
+  allRecords: any[] = [];
   data: any[] = [];
   totalRecords = 0;
   tableState: TableLazyLoadEvent = { page: 0, rows: 25, first: 0, columnFilters: {} };
@@ -101,7 +101,7 @@ export class AttendanceReportComponent implements OnInit {
     const students = this.storage.get<Student>('students');
     const records = this.storage.get<AttendanceRecord>('attendance');
 
-    this.baseData = records.map(r => {
+    this.allRecords = records.map(r => {
       const student = students.find(s => s.id === r.studentId);
       return {
         ...r,
@@ -116,7 +116,7 @@ export class AttendanceReportComponent implements OnInit {
   }
 
   applyFilters(): void {
-    let result = [...this.baseData];
+    let result = [...this.allRecords];
 
     if (this.fromDate) {
       const from = this.fromDate.toISOString().split('T')[0];

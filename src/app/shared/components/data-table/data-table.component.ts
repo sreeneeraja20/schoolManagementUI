@@ -131,15 +131,17 @@ export class DataTableComponent implements OnInit, OnDestroy {
 
   onLazyLoad(event: any): void {
     this.currentFirst = event?.first ?? this.currentFirst;
-    this.currentRows = event?.rows ?? this.currentRows;
+    const nextRows = event?.rows ?? this.currentRows;
+    this.currentRows = nextRows > 0 ? nextRows : this.defaultRows;
     this.currentSort = event?.sortField ? { field: event.sortField, order: event.sortOrder ?? 1 } : this.currentSort;
     this.emitLazyLoad();
   }
 
   private emitLazyLoad(): void {
+    const safeRows = this.currentRows > 0 ? this.currentRows : this.defaultRows;
     const payload: TableLazyLoadEvent = {
-      page: Math.floor(this.currentFirst / this.currentRows),
-      rows: this.currentRows,
+      page: Math.floor(this.currentFirst / safeRows),
+      rows: safeRows,
       first: this.currentFirst,
       sortField: this.currentSort?.field,
       sortOrder: this.currentSort ? (this.currentSort.order === 1 ? 'asc' : 'desc') : undefined,

@@ -84,10 +84,11 @@ export class AcademicYearComponent implements OnInit {
   }
 
   onLazyLoad(event: any): void {
+    const safeRows = Math.max(1, event.rows ?? this.tableState.rows ?? 10);
     this.tableState = {
       ...this.tableState,
-      page: Math.floor((event.first ?? 0) / (event.rows ?? this.tableState.rows)),
-      rows: event.rows ?? this.tableState.rows,
+      page: Math.floor((event.first ?? 0) / safeRows),
+      rows: safeRows,
       first: event.first ?? this.tableState.first,
       sortField: event.sortField ?? this.tableState.sortField,
       sortOrder: event.sortOrder === -1 ? 'desc' : event.sortOrder === 1 ? 'asc' : this.tableState.sortOrder

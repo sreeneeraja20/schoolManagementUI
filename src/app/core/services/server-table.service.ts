@@ -13,15 +13,16 @@ export class ServerTableService {
     request: TableLazyLoadEvent,
     options: ServerTableQueryOptions<T> = {}
   ): ServerSideResult<T> {
-    const pageRows = request.rows > 0 ? request.rows : 10;
+    const pageRows = Math.max(1, request.rows || 10);
     const first = request.first >= 0 ? request.first : 0;
     const page = request.page >= 0 ? request.page : Math.floor(first / pageRows);
 
     let filtered = [...rows];
+    const globalSearchFields = options.globalSearchFields ?? [];
     const globalSearch = (request.globalSearch ?? '').trim().toLowerCase();
-    if (globalSearch && options.globalSearchFields?.length) {
+    if (globalSearch && globalSearchFields.length) {
       filtered = filtered.filter(row =>
-        options.globalSearchFields!.some(field => String(row[field] ?? '').toLowerCase().includes(globalSearch))
+        globalSearchFields.some(field => String(row[field] ?? '').toLowerCase().includes(globalSearch))
       );
     }
 
