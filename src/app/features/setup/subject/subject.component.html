@@ -16,12 +16,13 @@
     <app-setup-banner [message]="'SETUP.DEPENDENCY_CLASSES' | translate"></app-setup-banner>
   } @else {
     <div class="table-container">
-      <p-table [value]="subjects()" [loading]="loading" [sortMode]="'multiple'" [paginator]="true" [rows]="10" [globalFilterFields]="['name', 'code']" #dt>
+      <p-table [value]="displayedSubjects()" [loading]="loading" [sortMode]="'multiple'" [paginator]="true" [rows]="10"
+        [lazy]="true" [totalRecords]="totalRecords" [first]="tableState.first" (onLazyLoad)="onLazyLoad($event)">
         <ng-template pTemplate="caption">
           <div class="table-caption">
             <span class="p-input-icon-left">
               <i class="pi pi-search"></i>
-              <input pInputText type="text" (input)="dt.filterGlobal($any($event.target).value, 'contains')" [placeholder]="'SETUP.SEARCH' | translate" />
+              <input pInputText type="text" (input)="onGlobalSearch($any($event.target).value)" [placeholder]="'SETUP.SEARCH' | translate" />
             </span>
           </div>
         </ng-template>

@@ -11,7 +11,7 @@ import { TenantService } from '../../../core/services/tenant.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { SetupBannerComponent } from '../../../shared/components/setup-banner/setup-banner.component';
 import { DataTableComponent } from '../../../shared/components/data-table/data-table.component';
-import { TableConfig, TableFilterEvent } from '../../../shared/components/data-table/data-table.models';
+import { TableConfig, TableLazyLoadEvent } from '../../../shared/components/data-table/data-table.models';
 import { Student } from '../../../core/models/student.model';
 import { Class } from '../../../core/models/class.model';
 import { Section } from '../../../core/models/section.model';
@@ -19,6 +19,7 @@ import { AcademicYear } from '../../../core/models/academic-year.model';
 import { CsvImportDialogComponent, CsvImportConfig } from '../../../shared/components/csv-import-dialog/csv-import-dialog.component';
 import { ExportService } from '../../../shared/utils/export.service';
 import { getAuditFieldsForCreate } from '../../../shared/utils/audit.util';
+import { ServerTableService } from '../../../core/services/server-table.service';
 
 @Component({
   selector: 'app-student-list',
@@ -37,6 +38,7 @@ export class StudentListComponent implements OnInit {
   private confirmationService = inject(ConfirmationService);
   private translate = inject(TranslateService);
   private exportService = inject(ExportService);
+  private serverTable = inject(ServerTableService);
 
   showImportDialog = false;
 
@@ -57,12 +59,13 @@ export class StudentListComponent implements OnInit {
     templateFilename: 'students'
   };
 
-  allData: any[] = [];
   data: any[] = [];
+  totalRecords = 0;
   loading = false;
   hasSetup = false;
   classes: Class[] = [];
   sections: Section[] = [];
+  tableState: TableLazyLoadEvent = { page: 0, rows: 10, first: 0, columnFilters: {} };
 
   tableConfig: TableConfig = {
     columns: [
@@ -92,10 +95,10 @@ export class StudentListComponent implements OnInit {
   };
 
   ngOnInit(): void {
-    this.loadData();
+    this.loadData(this.tableState);
   }
 
-  loadData(): void {
+  loadData(request: TableLazyLoadEvent): void {
     const years = this.storage.get<AcademicYear>('academic_years');
     const active = years.find(y => y.isActive);
     this.classes = this.storage.get<Class>('classes');
@@ -107,32 +110,26 @@ export class StudentListComponent implements OnInit {
     this.tableConfig.columns[3].filterOptions = this.sections.map(s => ({ label: s.name, value: s.id }));
 
     const students = this.storage.get<Student>('students');
-    const filtered = active ? students.filter(s => s.academicYearId === active.id) : students;
-    this.allData = filtered.map(s => ({
+    const rows = (active ? students.filter(s => s.academicYearId === active.id) : students).map(s => ({
       ...s,
       className: this.classes.find(c => c.id === s.classId)?.name ?? s.classId,
       sectionName: this.sections.find(sec => sec.id === s.sectionId)?.name ?? s.sectionId
     }));
-    this.data = [...this.allData];
+    const result = this.serverTable.query(rows, request, {
+      globalSearchFields: ['name', 'rollNumber', 'parentName'],
+      customFilters: {
+        className: (row, value) => row.classId === value,
+        sectionName: (row, value) => row.sectionId === value,
+        gender: (row, value) => row.gender === value
+      }
+    });
+    this.data = result.data;
+    this.totalRecords = result.totalRecords;
   }
 
-  onFilter(event: TableFilterEvent): void {
-    let result = [...this.allData];
-    if (event.globalSearch) {
-      const q = event.globalSearch.toLowerCase();
-      result = result.filter(r =>
-        r.name.toLowerCase().includes(q) ||
-        r.rollNumber.toLowerCase().includes(q) ||
-        r.parentName?.toLowerCase().includes(q)
-      );
-    }
-    const cf = event.columnFilters;
-    if (cf['name']) result = result.filter(r => r.name.toLowerCase().includes(cf['name'].toLowerCase()));
-    if (cf['rollNumber']) result = result.filter(r => r.rollNumber.toLowerCase().includes(cf['rollNumber'].toLowerCase()));
-    if (cf['className']) result = result.filter(r => r.classId === cf['className']);
-    if (cf['sectionName']) result = result.filter(r => r.sectionId === cf['sectionName']);
-    if (cf['gender']) result = result.filter(r => r.gender === cf['gender']);
-    this.data = result;
+  onLazyLoad(event: TableLazyLoadEvent): void {
+    this.tableState = event;
+    this.loadData(event);
   }
 
   onAdd(): void {
@@ -172,7 +169,7 @@ export class StudentListComponent implements OnInit {
       imported++;
     }
 
-    this.loadData();
+    this.loadData(this.tableState);
     const msg = this.translate.instant('IMPORT.SUCCESS', { count: imported });
     const skipMsg = skipped > 0 ? ' ' + this.translate.instant('IMPORT.SKIPPED', { count: skipped }) : '';
     this.messageService.add({ severity: 'success', summary: this.translate.instant('SETUP.SUCCESS'), detail: msg + skipMsg, life: 4000 });
@@ -215,7 +212,7 @@ export class StudentListComponent implements OnInit {
       message: this.translate.instant('STUDENTS.CONFIRM_DELETE'),
       accept: () => {
         this.storage.delete('students', row.id);
-        this.loadData();
+        this.loadData(this.tableState);
         this.messageService.add({ severity: 'success', summary: this.translate.instant('SETUP.SUCCESS'), detail: this.translate.instant('STUDENTS.DELETED'), life: 3000 });
       }
     });

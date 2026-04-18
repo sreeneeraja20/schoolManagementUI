@@ -14,8 +14,8 @@
   </div>
 
   <p-table [value]="data" [loading]="tableLoading" [paginator]="config.paginator !== false" [rows]="defaultRows"
-    [rowsPerPageOptions]="rowsPerPage" [totalRecords]="totalRecords" [dataKey]="dataKey" [sortMode]="'single'"
-    (onSort)="onSort($event)" (onPage)="onPage($event)" styleClass="p-datatable-gridlines p-datatable-striped"
+    [rowsPerPageOptions]="rowsPerPage" [totalRecords]="totalRecords" [dataKey]="dataKey" [sortMode]="'single'" [lazy]="true"
+    [first]="currentFirst" (onLazyLoad)="onLazyLoad($event)" styleClass="p-datatable-gridlines p-datatable-striped"
     [tableStyle]="{'min-width': '50rem'}">
 
     <ng-template pTemplate="header">

@@ -10,10 +10,11 @@ import { StorageService } from '../../../core/services/storage.service';
 import { TenantService } from '../../../core/services/tenant.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { DataTableComponent } from '../../../shared/components/data-table/data-table.component';
-import { TableConfig, TableFilterEvent } from '../../../shared/components/data-table/data-table.models';
+import { TableConfig, TableLazyLoadEvent } from '../../../shared/components/data-table/data-table.models';
 import { Exam } from '../../../core/models/exam.model';
 import { AcademicYear } from '../../../core/models/academic-year.model';
 import { Class } from '../../../core/models/class.model';
+import { ServerTableService } from '../../../core/services/server-table.service';
 
 @Component({
   selector: 'app-exam-list',
@@ -31,12 +32,14 @@ export class ExamListComponent implements OnInit {
   private messageService = inject(MessageService);
   private confirmationService = inject(ConfirmationService);
   private translate = inject(TranslateService);
+  private serverTable = inject(ServerTableService);
 
-  allData: Exam[] = [];
   data: any[] = [];
+  totalRecords = 0;
   loading = false;
   isAdmin = false;
   tableConfig!: TableConfig;
+  tableState: TableLazyLoadEvent = { page: 0, rows: 10, first: 0, columnFilters: {} };
 
   private classes: Class[] = [];
 
@@ -90,15 +93,22 @@ export class ExamListComponent implements OnInit {
       emptyMessage: 'EXAMS.NO_EXAMS'
     };
 
-    this.loadData();
+    this.loadData(this.tableState);
   }
 
-  loadData(): void {
+  loadData(request: TableLazyLoadEvent): void {
     const activeYear = this.storage.get<AcademicYear>('academic_years').find(y => y.isActive);
-    this.allData = this.storage.get<Exam>('exams').filter(e =>
+    const rows = this.buildRows(this.storage.get<Exam>('exams').filter(e =>
       !activeYear || e.academicYearId === activeYear.id
-    );
-    this.data = this.buildRows(this.allData);
+    ));
+    const result = this.serverTable.query(rows, request, {
+      globalSearchFields: ['name'],
+      customFilters: {
+        type: (row, value) => row.type === value
+      }
+    });
+    this.data = result.data;
+    this.totalRecords = result.totalRecords;
   }
 
   private buildRows(exams: Exam[]): any[] {
@@ -110,16 +120,9 @@ export class ExamListComponent implements OnInit {
     }));
   }
 
-  onFilter(event: TableFilterEvent): void {
-    let result = [...this.allData];
-    if (event.globalSearch) {
-      const q = event.globalSearch.toLowerCase();
-      result = result.filter(r => r.name.toLowerCase().includes(q));
-    }
-    const cf = event.columnFilters;
-    if (cf['name']) result = result.filter(r => r.name.toLowerCase().includes(cf['name'].toLowerCase()));
-    if (cf['type']) result = result.filter(r => r.type === cf['type']);
-    this.data = this.buildRows(result);
+  onLazyLoad(event: TableLazyLoadEvent): void {
+    this.tableState = event;
+    this.loadData(event);
   }
 
   onAdd(): void {
@@ -142,7 +145,7 @@ export class ExamListComponent implements OnInit {
       message: this.translate.instant('EXAMS.CONFIRM_DELETE'),
       accept: () => {
         this.storage.delete('exams', row.id);
-        this.loadData();
+        this.loadData(this.tableState);
         this.messageService.add({
           severity: 'success',
           summary: this.translate.instant('SETUP.SUCCESS'),

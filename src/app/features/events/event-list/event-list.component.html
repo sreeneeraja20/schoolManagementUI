@@ -13,11 +13,11 @@
   <app-data-table
     [config]="tableConfig"
     [data]="data"
-    [totalRecords]="data.length"
+    [totalRecords]="totalRecords"
     [loading]="loading"
     (addClick)="onAdd()"
     (editClick)="onEdit($event)"
     (deleteClick)="onDelete($event)"
-    (filterChange)="onFilter($event)">
+    (lazyLoad)="onLazyLoad($event)">
   </app-data-table>
 </div>

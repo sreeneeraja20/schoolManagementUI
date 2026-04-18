@@ -12,18 +12,20 @@
 
   <div class="table-container">
     <p-table
-      [value]="academicYears()"
+      [value]="displayedAcademicYears()"
       [loading]="loading"
       [sortMode]="'multiple'"
       [paginator]="true"
       [rows]="10"
-      [globalFilterFields]="['name']"
-      #dt>
+      [totalRecords]="totalRecords"
+      [first]="tableState.first"
+      [lazy]="true"
+      (onLazyLoad)="onLazyLoad($event)">
       <ng-template pTemplate="caption">
         <div class="table-caption">
           <span class="p-input-icon-left">
             <i class="pi pi-search"></i>
-            <input pInputText type="text" (input)="dt.filterGlobal($any($event.target).value, 'contains')" [placeholder]="'SETUP.SEARCH' | translate" />
+            <input pInputText type="text" (input)="onGlobalSearch($any($event.target).value)" [placeholder]="'SETUP.SEARCH' | translate" />
           </span>
         </div>
       </ng-template>

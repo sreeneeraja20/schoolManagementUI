@@ -11,10 +11,11 @@ import { TenantService } from '../../../../core/services/tenant.service';
 import { SeedDataService } from '../../../../core/services/seed-data.service';
 import { SetupBannerComponent } from '../../../../shared/components/setup-banner/setup-banner.component';
 import { DataTableComponent } from '../../../../shared/components/data-table/data-table.component';
-import { TableConfig, TableFilterEvent } from '../../../../shared/components/data-table/data-table.models';
+import { TableConfig, TableLazyLoadEvent } from '../../../../shared/components/data-table/data-table.models';
 import { Subject } from '../../../../core/models/subject.model';
 import { Class } from '../../../../core/models/class.model';
 import { AcademicYear } from '../../../../core/models/academic-year.model';
+import { ServerTableService } from '../../../../core/services/server-table.service';
 
 @Component({
   selector: 'app-subject-list',
@@ -32,12 +33,14 @@ export class SubjectListComponent implements OnInit {
   private messageService = inject(MessageService);
   private confirmationService = inject(ConfirmationService);
   private translate = inject(TranslateService);
+  private serverTable = inject(ServerTableService);
 
-  allData: any[] = [];
   data: any[] = [];
+  totalRecords = 0;
   loading = false;
   hasClasses = false;
   classes: Class[] = [];
+  tableState: TableLazyLoadEvent = { page: 0, rows: 10, first: 0, columnFilters: {} };
 
   tableConfig: TableConfig = {
     columns: [
@@ -61,38 +64,30 @@ export class SubjectListComponent implements OnInit {
 
   ngOnInit(): void {
     this.seedService.seed();
-    this.loadData();
+    this.loadData(this.tableState);
   }
 
-  loadData(): void {
+  loadData(request: TableLazyLoadEvent): void {
     const years = this.storage.get<AcademicYear>('academic_years');
     const active = years.find(y => y.isActive);
     const allClasses = this.storage.get<Class>('classes');
     this.classes = active ? allClasses.filter(c => c.academicYearId === active.id) : allClasses;
     this.hasClasses = this.classes.length > 0;
     const subjects = this.storage.get<Subject>('subjects');
-    this.allData = subjects.map(s => ({
+    const rows = subjects.map(s => ({
       ...s,
       classNames: (s.classIds ?? []).map((id: string) => this.classes.find(c => c.id === id)?.name ?? id)
     }));
-    this.data = [...this.allData];
+    const result = this.serverTable.query(rows, request, {
+      globalSearchFields: ['name', 'code']
+    });
+    this.data = result.data;
+    this.totalRecords = result.totalRecords;
   }
 
-  onFilter(event: TableFilterEvent): void {
-    let result = [...this.allData];
-    if (event.globalSearch) {
-      const q = event.globalSearch.toLowerCase();
-      result = result.filter(r => r.name.toLowerCase().includes(q) || r.code.toLowerCase().includes(q));
-    }
-    if (event.columnFilters['name']) {
-      const q = event.columnFilters['name'].toLowerCase();
-      result = result.filter(r => r.name.toLowerCase().includes(q));
-    }
-    if (event.columnFilters['code']) {
-      const q = event.columnFilters['code'].toLowerCase();
-      result = result.filter(r => r.code.toLowerCase().includes(q));
-    }
-    this.data = result;
+  onLazyLoad(event: TableLazyLoadEvent): void {
+    this.tableState = event;
+    this.loadData(event);
   }
 
   onAdd(): void {
@@ -110,7 +105,7 @@ export class SubjectListComponent implements OnInit {
       message: `${this.translate.instant('SETUP.CONFIRM_DELETE')} "${row.name}"?`,
       accept: () => {
         this.storage.delete('subjects', row.id);
-        this.loadData();
+        this.loadData(this.tableState);
         this.messageService.add({ severity: 'success', summary: this.translate.instant('SETUP.SUCCESS'), detail: this.translate.instant('SETUP.DELETED_SUCCESSFULLY'), life: 3000 });
       }
     });

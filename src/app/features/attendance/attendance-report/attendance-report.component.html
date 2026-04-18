@@ -81,7 +81,7 @@
   <app-data-table
     [config]="tableConfig"
     [data]="data"
-    [totalRecords]="data.length"
-    (filterChange)="onFilter($event)">
+    [totalRecords]="totalRecords"
+    (lazyLoad)="onLazyLoad($event)">
   </app-data-table>
 </div>

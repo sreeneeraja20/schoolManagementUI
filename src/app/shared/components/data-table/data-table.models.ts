@@ -43,3 +43,18 @@ export interface TablePageEvent {
   rows: number;
   first: number;
 }
+
+export interface TableLazyLoadEvent {
+  page: number;
+  rows: number;
+  first: number;
+  sortField?: string;
+  sortOrder?: 'asc' | 'desc';
+  globalSearch?: string;
+  columnFilters: Record<string, any>;
+}
+
+export interface ServerSideResult<T> {
+  data: T[];
+  totalRecords: number;
+}

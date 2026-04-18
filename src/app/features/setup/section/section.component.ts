@@ -20,6 +20,8 @@ import { SetupBannerComponent } from '../../../shared/components/setup-banner/se
 import { Section } from '../../../core/models/section.model';
 import { Class } from '../../../core/models/class.model';
 import { AcademicYear } from '../../../core/models/academic-year.model';
+import { ServerTableService } from '../../../core/services/server-table.service';
+import { TableLazyLoadEvent } from '../../../shared/components/data-table/data-table.models';
 
 @Component({
   selector: 'app-section',
@@ -42,16 +44,20 @@ export class SectionComponent implements OnInit {
   private confirmationService = inject(ConfirmationService);
   private translate = inject(TranslateService);
   private router = inject(Router);
+  private serverTable = inject(ServerTableService);
 
   sections = signal<Section[]>([]);
   classes = signal<Class[]>([]);
   filteredSections = signal<Section[]>([]);
+  displayedSections = signal<Section[]>([]);
   selectedClassFilter: string | null = null;
   dialogVisible = false;
   isEditMode = signal(false);
   editingId = signal<string | null>(null);
   form!: FormGroup;
   loading = false;
+  totalRecords = 0;
+  tableState: TableLazyLoadEvent = { page: 0, rows: 10, first: 0, columnFilters: {} };
 
   classOptions: { label: string; value: string }[] = [];
   classFilterOptions: { label: string; value: string | null }[] = [];
@@ -93,6 +99,37 @@ export class SectionComponent implements OnInit {
   applyFilter(): void {
     const all = this.storage.get<Section>('sections');
     this.filteredSections.set(this.selectedClassFilter ? all.filter(s => s.classId === this.selectedClassFilter) : all);
+    this.applyTableQuery();
+  }
+
+  private applyTableQuery(): void {
+    const rows = this.filteredSections().map(section => ({
+      ...section,
+      className: this.getClassName(section.classId)
+    }));
+    const result = this.serverTable.query(rows, this.tableState, {
+      globalSearchFields: ['name', 'className']
+    });
+    this.displayedSections.set(result.data);
+    this.totalRecords = result.totalRecords;
+  }
+
+  onGlobalSearch(value: string): void {
+    this.tableState = { ...this.tableState, globalSearch: value, first: 0, page: 0 };
+    this.applyTableQuery();
+  }
+
+  onLazyLoad(event: any): void {
+    const safeRows = Math.max(1, event.rows ?? this.tableState.rows ?? 10);
+    this.tableState = {
+      ...this.tableState,
+      page: Math.floor((event.first ?? 0) / safeRows),
+      rows: safeRows,
+      first: event.first ?? this.tableState.first,
+      sortField: event.sortField ?? this.tableState.sortField,
+      sortOrder: event.sortOrder === -1 ? 'desc' : event.sortOrder === 1 ? 'asc' : this.tableState.sortOrder
+    };
+    this.applyTableQuery();
   }
 
   onClassFilterChange(classId: string | null): void {
