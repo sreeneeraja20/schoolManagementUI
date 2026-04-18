@@ -20,7 +20,6 @@ import { SetupBannerComponent } from '../../../shared/components/setup-banner/se
 import { Section } from '../../../core/models/section.model';
 import { Class } from '../../../core/models/class.model';
 import { AcademicYear } from '../../../core/models/academic-year.model';
-import { ServerTableService } from '../../../core/services/server-table.service';
 import { TableLazyLoadEvent } from '../../../shared/components/data-table/data-table.models';
 
 @Component({
@@ -44,11 +43,8 @@ export class SectionComponent implements OnInit {
   private confirmationService = inject(ConfirmationService);
   private translate = inject(TranslateService);
   private router = inject(Router);
-  private serverTable = inject(ServerTableService);
 
-  sections = signal<Section[]>([]);
   classes = signal<Class[]>([]);
-  filteredSections = signal<Section[]>([]);
   displayedSections = signal<Section[]>([]);
   selectedClassFilter: string | null = null;
   dialogVisible = false;
@@ -84,7 +80,6 @@ export class SectionComponent implements OnInit {
     this.classes.set(activeClasses);
     this.classOptions = activeClasses.map(c => ({ label: c.name, value: c.id }));
     this.classFilterOptions = [{ label: this.translate.instant('SETUP.ALL_CLASSES'), value: null }, ...this.classOptions];
-    this.sections.set(this.storage.get<Section>('sections'));
     this.applyFilter();
   }
 
@@ -97,18 +92,25 @@ export class SectionComponent implements OnInit {
   }
 
   applyFilter(): void {
-    const all = this.storage.get<Section>('sections');
-    this.filteredSections.set(this.selectedClassFilter ? all.filter(s => s.classId === this.selectedClassFilter) : all);
     this.applyTableQuery();
   }
 
   private applyTableQuery(): void {
-    const rows = this.filteredSections().map(section => ({
-      ...section,
-      className: this.getClassName(section.classId)
-    }));
-    const result = this.serverTable.query(rows, this.tableState, {
-      globalSearchFields: ['name', 'className']
+    const request: TableLazyLoadEvent = {
+      ...this.tableState,
+      columnFilters: {
+        ...this.tableState.columnFilters,
+        ...(this.selectedClassFilter ? { classId: this.selectedClassFilter } : {})
+      }
+    };
+    const result = this.storage.getPage<Section>('sections', request, {
+      globalSearchPredicate: (row, searchText) => {
+        const className = this.getClassName(row.classId).toLowerCase();
+        return row.name.toLowerCase().includes(searchText) || className.includes(searchText);
+      },
+      customFilters: {
+        classId: (row, value) => row.classId === value
+      }
     });
     this.displayedSections.set(result.data);
     this.totalRecords = result.totalRecords;

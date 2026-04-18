@@ -15,7 +15,6 @@ import { TableConfig, TableLazyLoadEvent } from '../../../../shared/components/d
 import { Subject } from '../../../../core/models/subject.model';
 import { Class } from '../../../../core/models/class.model';
 import { AcademicYear } from '../../../../core/models/academic-year.model';
-import { ServerTableService } from '../../../../core/services/server-table.service';
 
 @Component({
   selector: 'app-subject-list',
@@ -33,7 +32,6 @@ export class SubjectListComponent implements OnInit {
   private messageService = inject(MessageService);
   private confirmationService = inject(ConfirmationService);
   private translate = inject(TranslateService);
-  private serverTable = inject(ServerTableService);
 
   data: any[] = [];
   totalRecords = 0;
@@ -73,15 +71,13 @@ export class SubjectListComponent implements OnInit {
     const allClasses = this.storage.get<Class>('classes');
     this.classes = active ? allClasses.filter(c => c.academicYearId === active.id) : allClasses;
     this.hasClasses = this.classes.length > 0;
-    const subjects = this.storage.get<Subject>('subjects');
-    const rows = subjects.map(s => ({
+    const result = this.storage.getPage<Subject>('subjects', request, {
+      globalSearchFields: ['name', 'code']
+    });
+    this.data = result.data.map(s => ({
       ...s,
       classNames: (s.classIds ?? []).map((id: string) => this.classes.find(c => c.id === id)?.name ?? id)
     }));
-    const result = this.serverTable.query(rows, request, {
-      globalSearchFields: ['name', 'code']
-    });
-    this.data = result.data;
     this.totalRecords = result.totalRecords;
   }
 

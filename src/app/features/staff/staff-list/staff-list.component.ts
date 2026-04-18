@@ -16,7 +16,6 @@ import { Subject } from '../../../core/models/subject.model';
 import { CsvImportDialogComponent, CsvImportConfig } from '../../../shared/components/csv-import-dialog/csv-import-dialog.component';
 import { ExportService } from '../../../shared/utils/export.service';
 import { getAuditFieldsForCreate } from '../../../shared/utils/audit.util';
-import { ServerTableService } from '../../../core/services/server-table.service';
 
 @Component({
   selector: 'app-staff-list',
@@ -35,7 +34,6 @@ export class StaffListComponent implements OnInit {
   private confirmationService = inject(ConfirmationService);
   private translate = inject(TranslateService);
   private exportService = inject(ExportService);
-  private serverTable = inject(ServerTableService);
 
   showImportDialog = false;
 
@@ -97,18 +95,16 @@ export class StaffListComponent implements OnInit {
 
   loadData(request: TableLazyLoadEvent): void {
     this.subjects = this.storage.get<Subject>('subjects');
-    const staff = this.storage.get<Staff>('staff');
-    const rows = staff.map(s => ({
-      ...s,
-      subjectNames: (s.subjectIds ?? []).map(id => this.subjects.find(sub => sub.id === id)?.name ?? id)
-    }));
-    const result = this.serverTable.query(rows, request, {
+    const result = this.storage.getPage<Staff>('staff', request, {
       globalSearchFields: ['name', 'email', 'role'],
       customFilters: {
         role: (row, value) => row.role === value
       }
     });
-    this.data = result.data;
+    this.data = result.data.map(s => ({
+      ...s,
+      subjectNames: (s.subjectIds ?? []).map(id => this.subjects.find(sub => sub.id === id)?.name ?? id)
+    }));
     this.totalRecords = result.totalRecords;
   }
 

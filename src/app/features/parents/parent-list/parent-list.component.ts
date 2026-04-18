@@ -15,7 +15,6 @@ import { TenantService } from '../../../core/services/tenant.service';
 import { ExportService } from '../../../shared/utils/export.service';
 import { DataTableComponent } from '../../../shared/components/data-table/data-table.component';
 import { TableConfig, TableLazyLoadEvent } from '../../../shared/components/data-table/data-table.models';
-import { ServerTableService } from '../../../core/services/server-table.service';
 
 @Component({
   selector: 'app-parent-list',
@@ -34,7 +33,6 @@ export class ParentListComponent implements OnInit {
   private confirmationService = inject(ConfirmationService);
   private translate = inject(TranslateService);
   private exportService = inject(ExportService);
-  private serverTable = inject(ServerTableService);
 
   data: any[] = [];
   totalRecords = 0;
@@ -84,14 +82,32 @@ export class ParentListComponent implements OnInit {
 
   loadData(request: TableLazyLoadEvent): void {
     this.loading = true;
-    const parents = this.parentService.getAll();
     const students = this.storage.get<Student>('students');
-
-    const rows = parents.map(p => {
-      const childNames = p.studentIds
-        .map(sid => students.find(s => s.id === sid)?.name ?? '')
+    const studentNameById = new Map(students.map(s => [s.id, s.name]));
+    const getChildrenNames = (studentIds: string[]): string =>
+      studentIds
+        .map(sid => studentNameById.get(sid) ?? '')
         .filter(n => n)
         .join(', ');
+
+    const result = this.storage.getPage<ParentAccount>('parent_accounts', request, {
+      globalSearchPredicate: (row, searchText) => {
+        const childrenNames = getChildrenNames(row.studentIds).toLowerCase();
+        return (
+          row.name.toLowerCase().includes(searchText) ||
+          row.email.toLowerCase().includes(searchText) ||
+          row.phone.toLowerCase().includes(searchText) ||
+          row.relation.toLowerCase().includes(searchText) ||
+          childrenNames.includes(searchText)
+        );
+      },
+      customFilters: {
+        tenantId: (row, value) => row.tenantId === value
+      },
+      fixedFilters: { tenantId: this.tenantService.getTenantId() }
+    });
+    this.data = result.data.map(p => {
+      const childNames = getChildrenNames(p.studentIds);
 
       let loginStatus: string;
       if (!p.isActive) {
@@ -104,11 +120,6 @@ export class ParentListComponent implements OnInit {
 
       return { ...p, childrenNames: childNames, loginStatus };
     });
-
-    const result = this.serverTable.query(rows, request, {
-      globalSearchFields: ['name', 'email', 'phone', 'relation', 'childrenNames']
-    });
-    this.data = result.data;
     this.totalRecords = result.totalRecords;
     this.loading = false;
   }

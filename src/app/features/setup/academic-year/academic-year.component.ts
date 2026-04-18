@@ -17,7 +17,6 @@ import { MessageService, ConfirmationService } from 'primeng/api';
 import { StorageService } from '../../../core/services/storage.service';
 import { TenantService } from '../../../core/services/tenant.service';
 import { AcademicYear } from '../../../core/models/academic-year.model';
-import { ServerTableService } from '../../../core/services/server-table.service';
 import { TableLazyLoadEvent } from '../../../shared/components/data-table/data-table.models';
 
 @Component({
@@ -40,9 +39,7 @@ export class AcademicYearComponent implements OnInit {
   private confirmationService = inject(ConfirmationService);
   private translate = inject(TranslateService);
   private router = inject(Router);
-  private serverTable = inject(ServerTableService);
 
-  academicYears = signal<AcademicYear[]>([]);
   displayedAcademicYears = signal<AcademicYear[]>([]);
   dialogVisible = false;
   isEditMode = signal(false);
@@ -66,12 +63,11 @@ export class AcademicYearComponent implements OnInit {
   }
 
   private loadData(): void {
-    this.academicYears.set(this.storage.get<AcademicYear>('academic_years'));
     this.applyTableQuery();
   }
 
   private applyTableQuery(): void {
-    const result = this.serverTable.query(this.academicYears(), this.tableState, {
+    const result = this.storage.getPage<AcademicYear>('academic_years', this.tableState, {
       globalSearchFields: ['name']
     });
     this.displayedAcademicYears.set(result.data);

@@ -15,7 +15,6 @@ import { TableConfig, TableLazyLoadEvent } from '../../../../shared/components/d
 import { Class } from '../../../../core/models/class.model';
 import { AcademicYear } from '../../../../core/models/academic-year.model';
 import { Section } from '../../../../core/models/section.model';
-import { ServerTableService } from '../../../../core/services/server-table.service';
 
 @Component({
   selector: 'app-class-list',
@@ -33,7 +32,6 @@ export class ClassListComponent implements OnInit {
   private messageService = inject(MessageService);
   private confirmationService = inject(ConfirmationService);
   private translate = inject(TranslateService);
-  private serverTable = inject(ServerTableService);
 
   data: any[] = [];
   totalRecords = 0;
@@ -71,17 +69,30 @@ export class ClassListComponent implements OnInit {
     const years = this.storage.get<AcademicYear>('academic_years');
     const active = years.find(y => y.isActive);
     this.hasActiveYear = !!active;
+    if (!active) {
+      this.sections = this.storage.get<Section>('sections');
+      this.data = [];
+      this.totalRecords = 0;
+      return;
+    }
     this.sections = this.storage.get<Section>('sections');
-    const allClasses = this.storage.get<Class>('classes');
-    const filtered = active ? allClasses.filter(c => c.academicYearId === active.id) : [];
-    const rows = filtered.map(c => ({
+    const queryRequest: TableLazyLoadEvent = {
+      ...request,
+      columnFilters: {
+        ...request.columnFilters,
+        academicYearId: active.id
+      }
+    };
+    const result = this.storage.getPage<Class>('classes', queryRequest, {
+      globalSearchFields: ['name'],
+      customFilters: {
+        academicYearId: (row, value) => row.academicYearId === value
+      }
+    });
+    this.data = result.data.map(c => ({
       ...c,
       sectionNames: this.sections.filter(s => s.classId === c.id).map(s => s.name)
     }));
-    const result = this.serverTable.query(rows, request, {
-      globalSearchFields: ['name']
-    });
-    this.data = result.data;
     this.totalRecords = result.totalRecords;
   }
 
